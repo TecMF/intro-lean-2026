@@ -54,7 +54,7 @@ KolmogorovPrimes/
 | `InfinitudePrimes.lean` | `false_of_finite_prime_exponents` | Contradiction for incompressible $n$ under $k$ finite primes: $k(2\lfloor\log_2\lfloor\log_2 n\rfloor\rfloor + 3) + c < \lfloor\log_2 n\rfloor + 1 \implies \bot$ |
 | `PrimeReconstruction.lean` | `reconstructFromPrime_div` | $p_m \mid n \implies p_m \cdot (n / p_m) = n$ |
 | `PrimeReconstruction.lean` | `analytic_reduction_prime_bound` | $p_m \le m(\lfloor\log_2 m\rfloor)^2 \implies p_m \le \pi(p_m)(\lfloor\log_2 p_m\rfloor)^2$ |
-| `WeakPNT.lean` | `log2_nthPrime_le_code_length` | **Core Bit-Balance Inequality:** $\lfloor\log_2 p_m\rfloor \le \|\text{enc\_m}\| + c$ |
+| `WeakPNT.lean` | `log2_nthPrime_le_code_length` | **Core Bit-Balance Inequality:** $\lfloor\log_2 p_m\rfloor \le \vert\text{enc}_m\vert + c$ |
 | `WeakPNT.lean` | `log2_nthPrime_le_compact_code` | $\lfloor\log_2 p_m\rfloor \le \lfloor\log_2 m\rfloor + 2\lfloor\log_2(\lfloor\log_2 m\rfloor + 1)\rfloor + c + 4$ |
 | `WeakPNT.lean` | `nthPrime_lt_compact_code_bound` | $p_m < 2^{c+5}(m + 1)(\lfloor\log_2 m\rfloor + 2)^2$ |
 | `WeakPNT.lean` | `log2_nthPrime_le_iterated_code` | $\lfloor\log_2 p_m\rfloor \le \lfloor\log_2 m\rfloor + \lfloor\log_2(\lfloor\log_2 m\rfloor + 1)\rfloor + 2\lfloor\log_2(\lfloor\log_2(\lfloor\log_2 m\rfloor + 1)\rfloor + 1)\rfloor + c + 5$ |
