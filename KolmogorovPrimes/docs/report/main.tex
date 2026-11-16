@@ -92,11 +92,11 @@
     {·}{{$\cdot$}}1
 }
 
-% Long \texttt identifiers cannot be hyphenated; allow extra inter-word stretch.
+% Long \emph identifiers cannot be hyphenated; allow extra inter-word stretch.
 \setlength{\emergencystretch}{3em}
 
 % Inconsolata (acmart's monospace font) has no italic shape: map italic
-% \texttt (e.g. inside \textit/\emph) to upright explicitly and silently.
+% \emph (e.g. inside \textit/\emph) to upright explicitly and silently.
 \sbox0{\ttfamily}
 \DeclareFontShape{T1}{zi4}{m}{it}{<->ssub*zi4/m/n}{}
 \DeclareFontShape{T1}{zi4}{b}{it}{<->ssub*zi4/b/n}{}
@@ -142,7 +142,7 @@
 % Abstract (MUST precede \maketitle in acmart!)
 % ============================================================================
 \begin{abstract}
-The Incompressibility Method, grounded in Kolmogorov Complexity, provides a rigorous information-theoretic framework for proving lower bounds in Computer Science and Number Theory by replacing probabilistic expectations with deterministic counting arguments over individual incompressible objects. While the Lean 4 theorem prover ecosystem features both a comprehensive mathematical library (\texttt{Mathlib}) and an emerging descriptive complexity library (\texttt{Complexitylib} / \texttt{Cslib.Kolmogorov}), a structural gap separates the two: \texttt{Complexitylib} operates syntactically on raw boolean lists (\texttt{List Bool}) and lacks both the arithmetic encoding bridges and the constructive prefix-free coding schemes required to serialize composite number-theoretic witnesses without boundary ambiguity. In this paper, we present \texttt{KolmogorovPrimes}, a complete, 100\% mechanically verified Lean 4 library (free of \texttt{sorry} axioms) that formalizes information-theoretic lower bounds on the prime distribution function $\pi(n)$ (following Schöning \& Pruim, Topic 9). Our proof engineering introduces three primary contributions: (i) an arithmetic-information bridge (\texttt{Basic.lean}) linking canonical binary representations (\texttt{Nat.bits}) to \texttt{Complexitylib} via an explicit left-inverse decoder (\texttt{decodeBin}) and proving the exact logarithmic bit-length identity $|\text{bin}(n)| = \lfloor\log_2 n\rfloor + 1$; (ii) a constructive hierarchy of self-terminating codes (\texttt{SelfTerminatingCode.lean}) encompassing the elementary bit-doubling code ($\overline{w}$), the compact length-prefixed code ($\text{code}(w) = \overline{\text{bin}(|w|)}w$), and the iterated code ($\text{code}_2(w) = \text{code}(\text{bin}(|w|))w$), complete with mechanical proofs of unique decodability on concatenated tapes; and (iii) an information-to-density transfer framework (\texttt{InfinitudePrimes.lean}, \texttt{PrimeReconstruction.lean}, and \texttt{WeakPNT.lean}) centering on the Core Bit-Balance Inequality $\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$, which progresses from a qualitative proof of the infinitude of primes to the quantitative Weak Prime Number Theorem bound $p_m < 2^{c+5}(m+1)(\lfloor\log_2 m\rfloor + 2)^2$.
+The Incompressibility Method, grounded in Kolmogorov Complexity, provides a rigorous information-theoretic framework for proving lower bounds in Computer Science and Number Theory by replacing probabilistic expectations with deterministic counting arguments over individual incompressible objects. While the Lean 4 theorem prover ecosystem features both a comprehensive mathematical library (\emph{Mathlib}) and an emerging descriptive complexity library (\emph{Complexitylib} / \emph{Cslib.Kolmogorov}), a structural gap separates the two: \emph{Complexitylib} operates syntactically on raw boolean lists (\emph{List Bool}) and lacks both the arithmetic encoding bridges and the constructive prefix-free coding schemes required to serialize composite number-theoretic witnesses without boundary ambiguity. In this paper, it is introduced \emph{KolmogorovPrimes}, an implementation of a verified Lean 4 library that formalizes information-theoretic lower bounds on the prime distribution function $\pi(n)$. The suggested proof engineering introduces three primary contributions: (i) an arithmetic-information bridge (\emph{Basic.lean}) linking canonical binary representations (\emph{Nat.bits}) to \emph{Complexitylib} via an explicit left-inverse decoder (\emph{decodeBin}) and proving the exact logarithmic bit-length identity $|\text{bin}(n)| = \lfloor\log_2 n\rfloor + 1$; (ii) a constructive hierarchy of self-terminating codes (\emph{SelfTerminatingCode.lean}) encompassing the elementary bit-doubling code ($\overline{w}$), the compact length-prefixed code ($\text{code}(w) = \overline{\text{bin}(|w|)}w$), and the iterated code ($\text{code}_2(w) = \text{code}(\text{bin}(|w|))w$), complete with mechanical proofs of unique decodability on concatenated tapes; and (iii) an information-to-density transfer framework (\emph{InfinitudePrimes.lean}, \emph{PrimeReconstruction.lean}, and \emph{WeakPNT.lean}) centering on the Core Bit-Balance Inequality $\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$, which progresses from a qualitative proof of the infinitude of primes to the quantitative Weak Prime Number Theorem bound.
 \end{abstract}
 
 % ============================================================================
@@ -171,9 +171,9 @@ The Incompressibility Method, grounded in Kolmogorov Complexity, provides a rigo
 \maketitle
 
 % ============================================================================
-% SECTION 1: INTRODUCTION & ARCHITECTURAL OVERVIEW
+% SECTION 1: INTRODUCTION
 % ============================================================================
-\section{Introduction and Architectural Overview}
+\section{Introduction}
 \label{sec:intro}
 
 Establishing complexity bounds is a central pillar of Theoretical Computer Science. However, there is a fundamental asymmetry between proving \emph{upper bounds} and proving \emph{lower bounds}. An upper bound is inherently constructive: to prove that a problem can be solved or that an object can be represented within a given resource threshold, it suffices to exhibit a single valid algorithm or encoding scheme. Conversely, a lower bound makes a universal impossibility claim: one must demonstrate that \emph{no} algorithm or representation—among infinitely many conceivable strategies—can beat a fundamental barrier.
@@ -188,52 +188,52 @@ Since each deterministic program $d$ produces at most one output $M(d)$, at most
 
 Once an incompressible integer $n$ (whose binary representation $\text{bin}(n)$ is incompressible) is fixed, any mathematical hypothesis that implies a ``too compact'' encoding of $n$ leads immediately to a contradiction. In Topic 9 of \emph{Gems of Theoretical Computer Science}~\cite{schoning1998gems}, Schöning and Pruim apply this paradigm to Number Theory: if prime numbers were finite or overly sparse, prime factorizations would yield compressed descriptions of arbitrary integers $n$, violating the incompressibility of $n$.
 
-\subsection{The Ecosystem Gap Between \texttt{Complexitylib} and \texttt{Mathlib}}
-While the Lean 4 theorem prover provides both an extensive mathematical library (\texttt{Mathlib})~\cite{mathlib2020} and a specialized computational complexity library (\texttt{Complexitylib} / \texttt{Cslib.Kolmogorov})~\cite{complexitylib2026}, formalizing Schöning and Pruim's results reveals three non-trivial engineering gaps between the two libraries:
+\subsection{The Ecosystem Gap Between \emph{Complexitylib} and \emph{Mathlib}}
+While the Lean 4 theorem prover provides both an extensive mathematical library (\emph{Mathlib})~\cite{mathlib2020} and a specialized computational complexity library (\emph{Complexitylib} / \emph{Cslib.Kolmogorov})~\cite{complexitylib2026}, formalizing Schöning and Pruim's results reveals three non-trivial engineering gaps between the two libraries:
 \begin{enumerate}
-    \item \textbf{Lack of an Arithmetic-to-BitString Bridge:} \texttt{Complexitylib} defines Kolmogorov complexity (\texttt{DescriptionMethod.ecomplexity}) over abstract lists of booleans (\texttt{List Bool}), whereas number-theoretic theorems in \texttt{Mathlib} operate on $\mathbb{N}$. No verified bridge previously connected \texttt{Mathlib}'s canonical binary representation (\texttt{Nat.bits}) to \texttt{Complexitylib}'s incompressibility lemmas with exact logarithmic length bounds $|\text{bin}(n)| = \lfloor\log_2 n\rfloor + 1$.
+    \item \textbf{Lack of an Arithmetic-to-BitString Bridge:} \emph{Complexitylib} defines Kolmogorov complexity (\emph{DescriptionMethod.ecomplexity}) over abstract lists of booleans (\emph{List Bool}), whereas number-theoretic theorems in \emph{Mathlib} operate on $\mathbb{N}$. No verified bridge previously connected \emph{Mathlib}'s canonical binary representation (\emph{Nat.bits}) to \emph{Complexitylib}'s incompressibility lemmas with exact logarithmic length bounds $|\text{bin}(n)| = \lfloor\log_2 n\rfloor + 1$.
     \item \textbf{Absence of Constructive Self-Terminating Codes:} In paper-and-pencil proofs, authors frequently write ``concatenate the binary encodings of $m$ and $k$'' and treat the overhead gently. In formal verification, naive concatenation $\text{bin}(m) \mathbin{++} \text{bin}(k)$ is \emph{not injective} because the boundary between the two bit strings is lost. A complete constructive hierarchy of prefix-free (self-terminating) codes ($\overline{w}$, $\text{code}(w)$, and $\text{code}_2(w)$) had to be built from scratch.
-    \item \textbf{Compilation Modularity and Tactic Transparency:} Importing heavy number-theoretic modules (\texttt{Mathlib.NumberTheory.PrimeCounting}) alongside computability modules slows down Lean's Language Server Protocol (LSP) if combined in a monolithic file. Furthermore, relying on opaque ``black-box'' automation obscures the mathematical insight required for an auditable formalization.
+    \item \textbf{Compilation Modularity and Tactic Transparency:} Importing heavy number-theoretic modules (\emph{Mathlib.NumberTheory.PrimeCounting}) alongside computability modules slows down Lean's Language Server Protocol (LSP) if combined in a monolithic file. Furthermore, relying on opaque ``black-box'' automation obscures the mathematical insight required for an auditable formalization.
 \end{enumerate}
 
-\subsection{Modular Architecture of the \texttt{KolmogorovPrimes} Library}
-To ensure fast incremental compilation, strict separation of concerns, and a one-to-one correspondence between formal code and mathematical narrative, we architected \texttt{KolmogorovPrimes} into five cascading modules:
+\subsection{Modular Architecture of the \emph{KolmogorovPrimes} Library}
+To ensure fast incremental compilation, strict separation of concerns, and a one-to-one correspondence between formal code and mathematical narrative, we architected \emph{KolmogorovPrimes} into five cascading modules:
 
 \begin{enumerate}
-    \item \texttt{KolmogorovPrimes/Basic.lean}: Establishes the canonical binary encoding $\text{bin} : \mathbb{N} \to \texttt{BinWord}$, its explicit left-inverse decoder $\text{decodeBin}$, the logarithmic bit-length identity, and the interface to \texttt{Complexitylib}'s \texttt{ecomplexity}.
-    \item \texttt{KolmogorovPrimes/SelfTerminatingCode.lean}: A pure list-level module (independent of prime number imports, compiling in $< 1$ second) that formalizes the elementary bit-doubling code (\texttt{bar}), the compact length-prefixed code (\texttt{code}), and the iterated code (\texttt{code2}), along with their prefix-free injectivity theorems.
-    \item \texttt{KolmogorovPrimes/InfinitudePrimes.lean}: Formalizes the qualitative proof of the infinitude of primes via $k$-exponent tuple compression (Exercise 9.1).
-    \item \texttt{KolmogorovPrimes/PrimeReconstruction.lean}: Formalizes bivariate integer reconstruction $n = p_m \cdot (n/p_m)$ from the $m$-th prime (Exercise 9.3), prefix-free pair encodings, and the analytic reduction from upper bounds on $p_m$ to lower bounds on $\pi(p_m)$ (Exercise 9.2).
-    \item \texttt{KolmogorovPrimes/WeakPNT.lean}: Unifies the preceding modules via the \textbf{Core Bit-Balance Inequality} ($\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$), deriving both the compact Weak Prime Number Theorem bound (Exercise 9.4), its iterated refinement (Exercise 9.5), and the exponential bridge to value bounds on $p_m$.
+    \item \emph{KolmogorovPrimes/Basic.lean}: Establishes the canonical binary encoding $\text{bin} : \mathbb{N} \to \emph{BinWord}$, its explicit left-inverse decoder $\text{decodeBin}$, the logarithmic bit-length identity, and the interface to \emph{Complexitylib}'s \emph{ecomplexity}.
+    \item \emph{KolmogorovPrimes/SelfTerminatingCode.lean}: A pure list-level module (independent of prime number imports, compiling in $< 1$ second) that formalizes the elementary bit-doubling code (\emph{bar}), the compact length-prefixed code (\emph{code}), and the iterated code (\emph{code2}), along with their prefix-free injectivity theorems.
+    \item \emph{KolmogorovPrimes/InfinitudePrimes.lean}: Formalizes the qualitative proof of the infinitude of primes via $k$-exponent tuple compression (Exercise 9.1).
+    \item \emph{KolmogorovPrimes/PrimeReconstruction.lean}: Formalizes bivariate integer reconstruction $n = p_m \cdot (n/p_m)$ from the $m$-th prime (Exercise 9.3), prefix-free pair encodings, and the analytic reduction from upper bounds on $p_m$ to lower bounds on $\pi(p_m)$ (Exercise 9.2).
+    \item \emph{KolmogorovPrimes/WeakPNT.lean}: Unifies the preceding modules via the \textbf{Core Bit-Balance Inequality} ($\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$), deriving both the compact Weak Prime Number Theorem bound (Exercise 9.4), its iterated refinement (Exercise 9.5), and the exponential bridge to value bounds on $p_m$.
 \end{enumerate}
 
 \begin{imageprompt}{System Architecture and Dependency Cascade (Figure 1)}
-\textbf{Prompt for Image Generation:} Create a clean, academic software architecture diagram on a white background showing the 5 Lean 4 modules of the \texttt{KolmogorovPrimes} library arranged in a bottom-up dependency graph. At the base, show two external library boxes: \texttt{Mathlib} (blue, labeled \texttt{Nat.bits}, \texttt{Nat.log2}, \texttt{Nat.Prime}, \texttt{Nat.nth}) and \texttt{Complexitylib} (purple, labeled \texttt{DescriptionMethod}, \texttt{ecomplexity}, \texttt{ENat}). Above them, show Layer 1: \texttt{Basic.lean} (connecting \texttt{bin}, \texttt{decodeBin}, and \texttt{exists\_incompressible\_word}) and \texttt{SelfTerminatingCode.lean} (containing \texttt{bar}, \texttt{code}, and \texttt{code2}). Above Layer 1, show two parallel tracks: on the left, \texttt{InfinitudePrimes.lean} (Ex. 9.1); on the right, \texttt{PrimeReconstruction.lean} (Ex. 9.2 \& 9.3) feeding into the apex module \texttt{WeakPNT.lean} (Ex. 9.4 \& 9.5). Use crisp vector typography and subtle arrows labeled with the exact theorem names passed between modules.
+\textbf{Prompt for Image Generation:} Create a clean, academic software architecture diagram on a white background showing the 5 Lean 4 modules of the \emph{KolmogorovPrimes} library arranged in a bottom-up dependency graph. At the base, show two external library boxes: \emph{Mathlib} (blue, labeled \emph{Nat.bits}, \emph{Nat.log2}, \emph{Nat.Prime}, \emph{Nat.nth}) and \emph{Complexitylib} (purple, labeled \emph{DescriptionMethod}, \emph{ecomplexity}, \emph{ENat}). Above them, show Layer 1: \emph{Basic.lean} (connecting \emph{bin}, \emph{decodeBin}, and \emph{exists\_incompressible\_word}) and \emph{SelfTerminatingCode.lean} (containing \emph{bar}, \emph{code}, and \emph{code2}). Above Layer 1, show two parallel tracks: on the left, \emph{InfinitudePrimes.lean} (Ex. 9.1); on the right, \emph{PrimeReconstruction.lean} (Ex. 9.2 \& 9.3) feeding into the apex module \emph{WeakPNT.lean} (Ex. 9.4 \& 9.5). Use crisp vector typography and subtle arrows labeled with the exact theorem names passed between modules.
 \end{imageprompt}
 
 % ============================================================================
 % SECTION 2: FOUNDATIONS — THE ARITHMETIC-INFORMATION BRIDGE (Basic.lean)
 % ============================================================================
-\section{Foundations: The Arithmetic-Information Bridge (\texttt{Basic.lean})}
+\section{Foundations: The Arithmetic-Information Bridge (\emph{Basic.lean})}
 \label{sec:basic}
 
-The first engineering decision in \texttt{Basic.lean} concerns the representation of binary words. While \texttt{Cslib} defines a type \texttt{Cslib.BitString (n : ℕ)}, inspecting its signature reveals that it represents a \emph{fixed-length bit vector} indexed by coordinates (\texttt{Fin n → Bool}).
+The first engineering decision in \emph{Basic.lean} concerns the representation of binary words. While \emph{Cslib} defines a type \emph{Cslib.BitString (n : ℕ)}, inspecting its signature reveals that it represents a \emph{fixed-length bit vector} indexed by coordinates (\emph{Fin n → Bool}).
 
-\subsection{Dynamic Boolean Lists (\texttt{BinWord}) vs. Fixed-Length Vectors}
+\subsection{Dynamic Boolean Lists (\emph{BinWord}) vs. Fixed-Length Vectors}
 Fixed-length vectors are unsuitable for algorithmic information theory and prefix-free coding for two reasons:
 \begin{itemize}
-    \item \textbf{Dynamic Length Transformation:} A self-terminating encoder maps a word $w$ of length $|w|$ to a codeword of length $2|w| + 1$ or $|w| + 2\lfloor\log_2 |w|\rfloor + 3$, where the output length depends dynamically on the value of the input. In dependent type theory, manipulating equality of vectors whose lengths are governed by nested floor-logarithms leads to severe ``dependent type hell'' (\texttt{HEq} casts).
-    \item \textbf{Compatibility with \texttt{Cslib.\allowbreak Kolmogorov}:} Internally, \texttt{Complexitylib} defines \texttt{Description\allowbreak Method} and \texttt{ecomplexity} over arbitrary-length lists \texttt{List Bool}.
+    \item \textbf{Dynamic Length Transformation:} A self-terminating encoder maps a word $w$ of length $|w|$ to a codeword of length $2|w| + 1$ or $|w| + 2\lfloor\log_2 |w|\rfloor + 3$, where the output length depends dynamically on the value of the input. In dependent type theory, manipulating equality of vectors whose lengths are governed by nested floor-logarithms leads to severe ``dependent type hell'' (\emph{HEq} casts).
+    \item \textbf{Compatibility with \emph{Cslib.\allowbreak Kolmogorov}:} Internally, \emph{Complexitylib} defines \emph{Description\allowbreak Method} and \emph{ecomplexity} over arbitrary-length lists \emph{List Bool}.
 \end{itemize}
 
-Accordingly, we define the reducible type alias \texttt{abbrev BinWord := List Bool}. Using \texttt{abbrev} rather than \texttt{def} marks the alias as reducible in Lean 4's kernel, allowing all standard list lemmas (\texttt{List.length\_append}, \texttt{List.append\_assoc}) and structural induction tactics to apply seamlessly without manual unfolding.
+Accordingly, we define the reducible type alias \emph{abbrev BinWord := List Bool}. Using \emph{abbrev} rather than \emph{def} marks the alias as reducible in Lean 4's kernel, allowing all standard list lemmas (\emph{List.length\_append}, \emph{List.append\_assoc}) and structural induction tactics to apply seamlessly without manual unfolding.
 
 \subsection{Canonical Binary Representation and Filtered Binary Induction}
-To map natural numbers $n \in \mathbb{N}$ to \texttt{BinWord}, we reuse \texttt{Mathlib}'s canonical binary decomposition \texttt{Nat.bits : ℕ → List Bool}, which produces bits from least significant to most significant without redundant leading zeros (so \texttt{bin 0 = []} and \texttt{bin 13 = [true, false, true, true]} since $13 = 1\cdot 2^0 + 0\cdot 2^1 + 1\cdot 2^2 + 1\cdot 2^3$).
+To map natural numbers $n \in \mathbb{N}$ to \emph{BinWord}, we reuse \emph{Mathlib}'s canonical binary decomposition \emph{Nat.bits : ℕ → List Bool}, which produces bits from least significant to most significant without redundant leading zeros (so \emph{bin 0 = []} and \emph{bin 13 = [true, false, true, true]} since $13 = 1\cdot 2^0 + 0\cdot 2^1 + 1\cdot 2^2 + 1\cdot 2^3$).
 
-A critical proof engineering challenge arose when proving that \texttt{bin} is injective (\texttt{Function.\allowbreak Injective bin}). In the version of \texttt{Cslib} imported by \texttt{Complexitylib}, the library function \texttt{Nat.ofBits} expects a coordinate function \texttt{Fin k → Bool} rather than a \texttt{List Bool}, causing a type mismatch if applied to \texttt{Nat.bits n}. To keep our formalization self-contained and version-resilient, we defined an explicit list decoder \texttt{decodeBin : BinWord → ℕ} via Horner's scheme (\texttt{Nat.bit b k = 2 * k + b}) and proved that it is a left inverse of \texttt{bin}:
+A critical proof engineering challenge arose when proving that \emph{bin} is injective (\emph{Function.\allowbreak Injective bin}). In the version of \emph{Cslib} imported by \emph{Complexitylib}, the library function \emph{Nat.ofBits} expects a coordinate function \emph{Fin k → Bool} rather than a \emph{List Bool}, causing a type mismatch if applied to \emph{Nat.bits n}. To keep our formalization self-contained and version-resilient, we defined an explicit list decoder \emph{decodeBin : BinWord → ℕ} via Horner's scheme (\emph{Nat.bit b k = 2 * k + b}) and proved that it is a left inverse of \emph{bin}:
 
-\begin{lstlisting}[language=Lean4, caption={Canonical binary encoding, explicit left-inverse decoder, and injectivity in \texttt{Basic.lean}.}]
+\begin{lstlisting}[language=Lean4, caption={Canonical binary encoding, explicit left-inverse decoder, and injectivity in \emph{Basic.lean}.}]
 def bin (n : ℕ) : BinWord :=
   Nat.bits n
 
@@ -251,19 +251,19 @@ theorem bin_injective : Function.Injective bin :=
   Function.LeftInverse.injective decodeBin_bin
 \end{lstlisting}
 
-\begin{didacticbox}{Why \texttt{Nat.binaryRec'} Solves the Zero-Padding Corner Case}
-Every natural number can be constructed recursively from $0$ by appending a least significant bit $b$ to $k$ via $\texttt{Nat.bit } b\ k = 2k + b$. However, when $k = 0$ and $b = \texttt{false}$, we have $2(0) + 0 = 0$. Because \texttt{Nat.bits 0 = []} avoids redundant zeros, the lemma \texttt{Nat.bits\_append\_bit} only unfolds $\texttt{Nat.bits (Nat.bit } b\ k\texttt{)}$ to $b :: \texttt{Nat.bits } k$ if we supply a proof $h : k = 0 \to b = \texttt{true}$. Rather than splitting cases manually with \texttt{by\_cases}, invoking \texttt{Mathlib}'s filtered binary induction principle \texttt{Nat.binaryRec'} automatically excludes the degenerate step $(b = \texttt{false}, k = 0)$ and provides the exact hypothesis $h$ needed to rewrite the goal in a single line! Once \texttt{decodeBin\_bin} is established, set-theoretic left-invertibility (\texttt{Function.LeftInverse.injective}) yields \texttt{bin\_injective} in one term-mode line.
+\begin{didacticbox}{Why \emph{Nat.binaryRec'} Solves the Zero-Padding Corner Case}
+Every natural number can be constructed recursively from $0$ by appending a least significant bit $b$ to $k$ via $\emph{Nat.bit } b\ k = 2k + b$. However, when $k = 0$ and $b = \emph{false}$, we have $2(0) + 0 = 0$. Because \emph{Nat.bits 0 = []} avoids redundant zeros, the lemma \emph{Nat.bits\_append\_bit} only unfolds $\emph{Nat.bits (Nat.bit } b\ k\emph{)}$ to $b :: \emph{Nat.bits } k$ if we supply a proof $h : k = 0 \to b = \emph{true}$. Rather than splitting cases manually with \emph{by\_cases}, invoking \emph{Mathlib}'s filtered binary induction principle \emph{Nat.binaryRec'} automatically excludes the degenerate step $(b = \emph{false}, k = 0)$ and provides the exact hypothesis $h$ needed to rewrite the goal in a single line! Once \emph{decodeBin\_bin} is established, set-theoretic left-invertibility (\emph{Function.LeftInverse.injective}) yields \emph{bin\_injective} in one term-mode line.
 \end{didacticbox}
 
-\subsection{Exact Logarithmic Bit-Length Identity and \texttt{ENat} Complexity}
-In Footnote 1 of Topic 9~\cite{schoning1998gems}, Schöning notes that the binary representation of any positive integer $n > 0$ has length $\lfloor\log_2 n\rfloor + 1$. In \texttt{Mathlib}, the binary length of $n$ (\texttt{Nat.size n}) and the integer base-2 logarithm (\texttt{Nat.log2 n}) are governed by two complementary power-of-two inequalities:
+\subsection{Exact Logarithmic Bit-Length Identity and \emph{ENat} Complexity}
+In Footnote 1 of Topic 9~\cite{schoning1998gems}, Schöning notes that the binary representation of any positive integer $n > 0$ has length $\lfloor\log_2 n\rfloor + 1$. In \emph{Mathlib}, the binary length of $n$ (\emph{Nat.size n}) and the integer base-2 logarithm (\emph{Nat.log2 n}) are governed by two complementary power-of-two inequalities:
 \begin{enumerate}
-    \item $n < 2^{\lfloor\log_2 n\rfloor + 1}$ (\texttt{Nat.lt\_log2\_self}), which via \texttt{Nat.size\_le} implies $\texttt{n.size} \le \lfloor\log_2 n\rfloor + 1$;
-    \item For $n \neq 0$, $2^{\lfloor\log_2 n\rfloor} \le n$ (\texttt{Nat.log2\_self\_le}), which via \texttt{Nat.lt\_size} implies $\lfloor\log_2 n\rfloor < \texttt{n.size}$, or equivalently $\lfloor\log_2 n\rfloor + 1 \le \texttt{n.size}$.
+    \item $n < 2^{\lfloor\log_2 n\rfloor + 1}$ (\emph{Nat.lt\_log2\_self}), which via \emph{Nat.size\_le} implies $\emph{n.size} \le \lfloor\log_2 n\rfloor + 1$;
+    \item For $n \neq 0$, $2^{\lfloor\log_2 n\rfloor} \le n$ (\emph{Nat.log2\_self\_le}), which via \emph{Nat.lt\_size} implies $\lfloor\log_2 n\rfloor < \emph{n.size}$, or equivalently $\lfloor\log_2 n\rfloor + 1 \le \emph{n.size}$.
 \end{enumerate}
-Combining both directions by antisymmetry (\texttt{le\_antisymm}) yields the exact formula \texttt{length\_bin\_pos}, from which we also derive the universal upper bound $|\text{bin}(n)| \le \lfloor\log_2 n\rfloor + 1$ valid for all $n \in \mathbb{N}$ (including $n = 0$):
+Combining both directions by antisymmetry (\emph{le\_antisymm}) yields the exact formula \emph{length\_bin\_pos}, from which we also derive the universal upper bound $|\text{bin}(n)| \le \lfloor\log_2 n\rfloor + 1$ valid for all $n \in \mathbb{N}$ (including $n = 0$):
 
-\begin{lstlisting}[language=Lean4, caption={Logarithmic bit-length theorems and \texttt{Complexitylib} connection in \texttt{Basic.lean}.}]
+\begin{lstlisting}[language=Lean4, caption={Logarithmic bit-length theorems and \emph{Complexitylib} connection in \emph{Basic.lean}.}]
 theorem length_bin_pos (n : ℕ) (hn : n ≠ 0) :
     (bin n).length = Nat.log2 n + 1 := by
   rw [bin, Nat.size_eq_bits_len]
@@ -280,53 +280,53 @@ theorem exists_incompressible_word (M : DescriptionMethod BinWord) (m : ℕ) :
   M.exists_length_eq_le_ecomplexity m
 \end{lstlisting}
 
-Finally, notice the return type of \texttt{M.ecomplexity w} in \texttt{exists\_incompressible\_word}: it takes values in the extended natural numbers $\mathbb{N}_\infty = \mathbb{N} \cup \{\infty\}$ (\texttt{ENat}), and the length $m$ is coerced via \texttt{(m : ℕ∞)}. Why does \texttt{Complexitylib} use $\mathbb{N}_\infty$ instead of $\mathbb{N}$? Because \texttt{DescriptionMethod BinWord} models an \emph{arbitrary} partial decompression function, not necessarily a universal or surjective one. If a machine $M$ fails to output $w$ for any input program $d$, the set of valid descriptions $\{d \mid M(d) = w\}$ is empty, and its infimum in the complete lattice $\mathbb{N}_\infty$ is well-defined as $\top = \infty$. Working in $\mathbb{N}_\infty$ at the complexity boundary and projecting down to $\mathbb{N}$ via \texttt{ENat.coe\_le\_coe.mp} when performing bit-length arithmetic is a recurring pattern in our library.
+Finally, notice the return type of \emph{M.ecomplexity w} in \emph{exists\_incompressible\_word}: it takes values in the extended natural numbers $\mathbb{N}_\infty = \mathbb{N} \cup \{\infty\}$ (\emph{ENat}), and the length $m$ is coerced via \emph{(m : ℕ∞)}. Why does \emph{Complexitylib} use $\mathbb{N}_\infty$ instead of $\mathbb{N}$? Because \emph{DescriptionMethod BinWord} models an \emph{arbitrary} partial decompression function, not necessarily a universal or surjective one. If a machine $M$ fails to output $w$ for any input program $d$, the set of valid descriptions $\{d \mid M(d) = w\}$ is empty, and its infimum in the complete lattice $\mathbb{N}_\infty$ is well-defined as $\top = \infty$. Working in $\mathbb{N}_\infty$ at the complexity boundary and projecting down to $\mathbb{N}$ via \emph{ENat.coe\_le\_coe.mp} when performing bit-length arithmetic is a recurring pattern in our library.
 
 % ============================================================================
 % SECTION 3: CONSTRUCTIVE SELF-TERMINATING CODES (SelfTerminatingCode.lean)
 % ============================================================================
-\section{Constructive Theory of Self-Terminating Codes (\texttt{SelfTerminatingCode.lean})}
+\section{Constructive Theory of Self-Terminating Codes (\emph{SelfTerminatingCode.lean})}
 \label{sec:codes}
 
 \textit{[Blueprint Outline for Next Iteration:
 \begin{itemize}
     \item \textbf{3.1 The Boundary Ambiguity Problem:} Concrete numerical example showing why raw concatenation $\text{bin}(m) \mathbin{++} \text{bin}(k)$ loses the cut point.
-    \item \textbf{3.2 Total Formulation of $\overline{w}$ (\texttt{bar}):} Explain why Schöning's informal definition ($a_1 0 \dots a_n 1$, length $2|w|$) fails on the empty word \texttt{[]} and requires lookahead in structural recursion, whereas our definition (\texttt{false :: b :: bar bs} terminated by \texttt{[true]}, length $2|w|+1$) is total and makes the 4-case structural induction in \texttt{bar\_append\_inj} completely transparent.
-    \item \textbf{3.3 Cascading Prefix-Free Injectivity (\texttt{code} and \texttt{code2}):} Explain how \texttt{code\_append\_inj} and \texttt{code2\_append\_inj} avoid induction entirely by reassociating list concatenation (\texttt{List.append\_assoc}), peeling off the header via the previous level's injectivity theorem, applying \texttt{bin\_injective} to equate payload lengths, and concluding via \texttt{List.append\_inj}. Also explain the bridge between \texttt{Nat.log2} and \texttt{Nat.log 2} (\texttt{Nat.log2\_eq\_log\_two}) used to prove monotonicity in \texttt{length\_code2\_le}.
+    \item \textbf{3.2 Total Formulation of $\overline{w}$ (\emph{bar}):} Explain why Schöning's informal definition ($a_1 0 \dots a_n 1$, length $2|w|$) fails on the empty word \emph{[]} and requires lookahead in structural recursion, whereas our definition (\emph{false :: b :: bar bs} terminated by \emph{[true]}, length $2|w|+1$) is total and makes the 4-case structural induction in \emph{bar\_append\_inj} completely transparent.
+    \item \textbf{3.3 Cascading Prefix-Free Injectivity (\emph{code} and \emph{code2}):} Explain how \emph{code\_append\_inj} and \emph{code2\_append\_inj} avoid induction entirely by reassociating list concatenation (\emph{List.append\_assoc}), peeling off the header via the previous level's injectivity theorem, applying \emph{bin\_injective} to equate payload lengths, and concluding via \emph{List.append\_inj}. Also explain the bridge between \emph{Nat.log2} and \emph{Nat.log 2} (\emph{Nat.log2\_eq\_log\_two}) used to prove monotonicity in \emph{length\_code2\_le}.
 \end{itemize}]}
 
 \begin{imageprompt}{Visual Comparison of Prefix-Free Tape Layouts (Figure 2)}
-\textbf{Prompt for Image Generation:} Create a didactic horizontal tape diagram on a clean white background comparing three self-terminating binary encoding schemes for a 10-bit word $w$. Top tape (\texttt{bar w}): show alternating gray control bits (\texttt{0}) interleaved with blue data bits ($b_i$), ending with a red stop bit (\texttt{1}), labeled ``Total length: $2|w| + 1 = 21$ bits''. Middle tape (\texttt{code w}): show a compact green header $\overline{\text{bin}(|w|)}$ of 9 bits followed by the intact blue payload $w$ of 10 bits, labeled ``Total length: $|w| + 2\lfloor\log_2 |w|\rfloor + 3 = 19$ bits (saves $50\%$ asymptotically)''. Bottom tape (\texttt{code2 w}): show a nested two-stage header $\text{code}(\text{bin}(|w|))$ followed by $w$. Include brackets and arrows showing how a Turing machine read head scans the stop bit \texttt{1}, decodes the exact payload length $|w|$, and slices the concatenated suffix $v$ with zero ambiguity.
+\textbf{Prompt for Image Generation:} Create a didactic horizontal tape diagram on a clean white background comparing three self-terminating binary encoding schemes for a 10-bit word $w$. Top tape (\emph{bar w}): show alternating gray control bits (\emph{0}) interleaved with blue data bits ($b_i$), ending with a red stop bit (\emph{1}), labeled ``Total length: $2|w| + 1 = 21$ bits''. Middle tape (\emph{code w}): show a compact green header $\overline{\text{bin}(|w|)}$ of 9 bits followed by the intact blue payload $w$ of 10 bits, labeled ``Total length: $|w| + 2\lfloor\log_2 |w|\rfloor + 3 = 19$ bits (saves $50\%$ asymptotically)''. Bottom tape (\emph{code2 w}): show a nested two-stage header $\text{code}(\text{bin}(|w|))$ followed by $w$. Include brackets and arrows showing how a Turing machine read head scans the stop bit \emph{1}, decodes the exact payload length $|w|$, and slices the concatenated suffix $v$ with zero ambiguity.
 \end{imageprompt}
 
 % ============================================================================
 % SECTION 4: QUALITATIVE INFINITUDE OF PRIMES (InfinitudePrimes.lean)
 % ============================================================================
-\section{Qualitative Bound: Infinitude of Primes via Exponent Tuples (\texttt{InfinitudePrimes.lean})}
+\section{Qualitative Bound: Infinitude of Primes via Exponent Tuples (\emph{InfinitudePrimes.lean})}
 \label{sec:infinitude}
 
 \textit{[Blueprint Outline for Next Iteration:
 \begin{itemize}
-    \item \textbf{4.1 Logarithmic Upper Bound on Exponents (\texttt{exponent\_le\_log2\_of\_pow\_dvd}):} Walk through $p^e \mid n \implies 2^e \le p^e \le n \implies e \le \lfloor\log_2 n\rfloor$ and the concrete example for a 1024-bit integer $n$.
-    \item \textbf{4.2 Prefix-Free Serialization of $k$-Exponent Lists (\texttt{encodeExponents}):} Explain how encoding $[e_1, \dots, e_k]$ by concatenating $\texttt{bar (bin } e_i\texttt{)}$ allows us to prove unique decodability (\texttt{encodeExponents\_inj\_of\_length\_eq}) and bound the total length by $k(2\lfloor\log_2\lfloor\log_2 n\rfloor\rfloor + 3)$.
-    \item \textbf{4.3 The Kolmogorov Contradiction (\texttt{false\_of\_finite\_prime\_exponents}):} Detail the final contradiction for Exercise 9.1.
+    \item \textbf{4.1 Logarithmic Upper Bound on Exponents (\emph{exponent\_le\_log2\_of\_pow\_dvd}):} Walk through $p^e \mid n \implies 2^e \le p^e \le n \implies e \le \lfloor\log_2 n\rfloor$ and the concrete example for a 1024-bit integer $n$.
+    \item \textbf{4.2 Prefix-Free Serialization of $k$-Exponent Lists (\emph{encodeExponents}):} Explain how encoding $[e_1, \dots, e_k]$ by concatenating $\emph{bar (bin } e_i\emph{)}$ allows us to prove unique decodability (\emph{encodeExponents\_inj\_of\_length\_eq}) and bound the total length by $k(2\lfloor\log_2\lfloor\log_2 n\rfloor\rfloor + 3)$.
+    \item \textbf{4.3 The Kolmogorov Contradiction (\emph{false\_of\_finite\_prime\_exponents}):} Detail the final contradiction for Exercise 9.1.
 \end{itemize}]}
 
 % ============================================================================
 % SECTION 5: QUANTITATIVE BOUNDS & THE WEAK PNT (PrimeReconstruction & WeakPNT)
 % ============================================================================
-\section{Quantitative Bounds: The Weak Prime Number Theorem (\texttt{PrimeReconstruction.lean} \& \texttt{WeakPNT.lean})}
+\section{Quantitative Bounds: The Weak Prime Number Theorem (\emph{PrimeReconstruction.lean} \& \emph{WeakPNT.lean})}
 \label{sec:weakpnt}
 
 \textit{[Blueprint Outline for Next Iteration:
 \begin{itemize}
-    \item \textbf{5.1 Bivariate Reconstruction and Exact Superadditivity of $\lfloor\log_2 \cdot\rfloor$:} Explain why $\lfloor\log_2 p_m\rfloor + \lfloor\log_2(n/p_m)\rfloor \le \lfloor\log_2 n\rfloor$ (\texttt{add\_log2\_div\_le\_log2}) holds without any rounding loss, whereas the reverse inequality would point in the wrong direction for cancellation.
-    \item \textbf{5.2 The Core Bit-Balance Inequality (\texttt{log2\_nthPrime\_le\_code\_length}):} Show how the quotient term $\lfloor\log_2(n/p_m)\rfloor$ cancels from both sides, leaving $\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$. Instantiate for \texttt{code} (Ex. 9.4) and \texttt{code2} (Ex. 9.5).
-    \item \textbf{5.3 Exponential Bridge and Analytic Reduction to $\pi(n)$:} Explain \texttt{two\_pow\_log2\_le\_succ} ($2^{\lfloor\log_2 x\rfloor} \le x + 1$), the derivation of $p_m < 2^{c+5}(m+1)(\lfloor\log_2 m\rfloor + 2)^2$, and the cross-multiplied formulation of Exercise 9.2 (\texttt{analytic\_reduction\_prime\_bound}) using 0-indexed primes (\texttt{Nat.nth\_strictMono}).
+    \item \textbf{5.1 Bivariate Reconstruction and Exact Superadditivity of $\lfloor\log_2 \cdot\rfloor$:} Explain why $\lfloor\log_2 p_m\rfloor + \lfloor\log_2(n/p_m)\rfloor \le \lfloor\log_2 n\rfloor$ (\emph{add\_log2\_div\_le\_log2}) holds without any rounding loss, whereas the reverse inequality would point in the wrong direction for cancellation.
+    \item \textbf{5.2 The Core Bit-Balance Inequality (\emph{log2\_nthPrime\_le\_code\_length}):} Show how the quotient term $\lfloor\log_2(n/p_m)\rfloor$ cancels from both sides, leaving $\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$. Instantiate for \emph{code} (Ex. 9.4) and \emph{code2} (Ex. 9.5).
+    \item \textbf{5.3 Exponential Bridge and Analytic Reduction to $\pi(n)$:} Explain \emph{two\_pow\_log2\_le\_succ} ($2^{\lfloor\log_2 x\rfloor} \le x + 1$), the derivation of $p_m < 2^{c+5}(m+1)(\lfloor\log_2 m\rfloor + 2)^2$, and the cross-multiplied formulation of Exercise 9.2 (\emph{analytic\_reduction\_prime\_bound}) using 0-indexed primes (\emph{Nat.nth\_strictMono}).
 \end{itemize}]}
 
 \begin{imageprompt}{The Core Bit-Balance Cancellation Mechanism (Figure 3)}
-\textbf{Prompt for Image Generation:} Create a clear visual balance-scale and aligned bar-chart diagram illustrating the Core Bit-Balance Inequality (\texttt{log2\_nthPrime\_le\_code\_length}). Compare two horizontal stacked bars of equal total width representing $\lfloor\log_2 n\rfloor + 1$ bits. Top bar (Incompressible Lower Bound via \texttt{add\_log2\_div\_le\_log2}): split into a gold block of width $\lfloor\log_2 p_m\rfloor$ (``Information in prime $p_m$'') and a gray block of width $\lfloor\log_2(n/p_m)\rfloor$ (``Information in quotient $k$''). Bottom bar (Compressed Description Upper Bound): split into a green block of width $|\text{enc\_m}| + c$ (``Prefix-free code of index $m$ + machine overhead'') and an identical gray block of width $\lfloor\log_2(n/p_m)\rfloor + 1$. Draw red cancellation slashes through the matching gray quotient blocks $\lfloor\log_2(n/p_m)\rfloor$ on both bars, leaving a bold arrow pointing to the conclusion: $\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$.
+\textbf{Prompt for Image Generation:} Create a clear visual balance-scale and aligned bar-chart diagram illustrating the Core Bit-Balance Inequality (\emph{log2\_nthPrime\_le\_code\_length}). Compare two horizontal stacked bars of equal total width representing $\lfloor\log_2 n\rfloor + 1$ bits. Top bar (Incompressible Lower Bound via \emph{add\_log2\_div\_le\_log2}): split into a gold block of width $\lfloor\log_2 p_m\rfloor$ (``Information in prime $p_m$'') and a gray block of width $\lfloor\log_2(n/p_m)\rfloor$ (``Information in quotient $k$''). Bottom bar (Compressed Description Upper Bound): split into a green block of width $|\text{enc\_m}| + c$ (``Prefix-free code of index $m$ + machine overhead'') and an identical gray block of width $\lfloor\log_2(n/p_m)\rfloor + 1$. Draw red cancellation slashes through the matching gray quotient blocks $\lfloor\log_2(n/p_m)\rfloor$ on both bars, leaving a bold arrow pointing to the conclusion: $\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$.
 \end{imageprompt}
 
 % ============================================================================
@@ -337,8 +337,8 @@ Finally, notice the return type of \texttt{M.ecomplexity w} in \texttt{exists\_i
 
 \textit{[Blueprint Outline for Next Iteration:
 \begin{itemize}
-    \item \textbf{6.1 Non-Vacuity and Axiomatic Isolation of the Church-Turing / Invariance Postulate:} Explain why passing the machine description bound \texttt{h\_desc} as an explicit hypothesis—backed by mechanically proved injectivity of the encoders—is the cleanest architectural pattern when working over abstract \texttt{DescriptionMethod}s.
-    \item \textbf{6.2 Summary of Verified Theorems and Future Work:} Present the complete verification table and discuss extensions toward concrete Turing machine models in \texttt{Cslib}.
+    \item \textbf{6.1 Non-Vacuity and Axiomatic Isolation of the Church-Turing / Invariance Postulate:} Explain why passing the machine description bound \emph{h\_desc} as an explicit hypothesis—backed by mechanically proved injectivity of the encoders—is the cleanest architectural pattern when working over abstract \emph{DescriptionMethod}s.
+    \item \textbf{6.2 Summary of Verified Theorems and Future Work:} Present the complete verification table and discuss extensions toward concrete Turing machine models in \emph{Cslib}.
 \end{itemize}]}
 
 % ============================================================================
