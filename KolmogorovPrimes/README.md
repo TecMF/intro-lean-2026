@@ -1,6 +1,10 @@
 # Formalization of Lower Bounds on Prime Distribution via Kolmogorov Complexity
 
-This repository contains a complete, mechanically verified formalization in **Lean 4** of information-theoretic lower bounds on the distribution of prime numbers $\pi(n)$ using the **Incompressibility Method** (based on Schöning & Pruim, *Gems of Theoretical Computer Science*, Topic 9).
+**Assignee: Gabriel Resende Machado — INF2290 (2026.2).**
+
+---
+
+This repository contains a complete, mechanically verified formalization in **Lean 4** of information-theoretic lower bounds on the distribution of prime numbers $\pi(n)$ using the **Incompressibility Method** [(based on Schöning & Pruim, *Gems of Theoretical Computer Science*, Topic 9).](References/Gems_of_Theoretical_Computer_Science.pdf)
 
 Developed as the final project for ****INF2290** (Formalization in Lean)** at **PUC-Rio**, this library bridges the gap between **Complexitylib** (`Cslib.Kolmogorov`, which provides abstract Kolmogorov complexity over bit strings) and **Mathlib** (`Mathlib.NumberTheory.PrimeCounting`, which provides prime enumeration and arithmetic foundations).
 
@@ -97,7 +101,3 @@ grep -rn "sorry" KolmogorovPrimes/
 * M. Li and P. Vitányi, An Introduction to Kolmogorov Complexity and Its Applications, 4th ed., Springer, 2019.
 
 * cslib-community/complexitylib and leanprover-community/mathlib4.
-
-## Author
-
-Gabriel Resende Machado — Ecoa Institute - PUC-Rio (INF2290 — 2026.2).
