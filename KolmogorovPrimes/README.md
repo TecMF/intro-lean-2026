@@ -4,7 +4,7 @@
 
 ---
 
-This repository contains a complete, mechanically verified formalization in **Lean 4** of information-theoretic lower bounds on the distribution of prime numbers $\pi(n)$ using the **Incompressibility Method** [(based on Schöning & Pruim, *Gems of Theoretical Computer Science*, Topic 9).](KolmogorovPrimes/docs/references/schoning_topic9_kolmogorov_complexity.pdf)
+This repository contains a complete, mechanically verified formalization in **Lean 4** of information-theoretic lower bounds on the distribution of prime numbers $\pi(n)$ using the **Incompressibility Method** [(based on Schöning & Pruim, *Gems of Theoretical Computer Science*, Topic 9).](docs/references/schoning_topic9_kolmogorov_complexity.pdf)
 
 Developed as the final project for ****INF2290** (Formalization in Lean)** at **PUC-Rio**, this library bridges the gap between **Complexitylib** (`Cslib.Kolmogorov`, which provides abstract Kolmogorov complexity over bit strings) and **Mathlib** (`Mathlib.NumberTheory.PrimeCounting`, which provides prime enumeration and arithmetic foundations).
 
