@@ -59,12 +59,10 @@ The primary complexity within these objectives resides in the bit-balance inequa
 The remainder of this paper is structured as follows. Section~\ref{sec:background} outlines the theoretical background of Kolmogorov complexity and prefix-free coding. Section~\ref{sec:methodology} details the software engineering and formalization architecture across the five core Lean modules. Section~\ref{sec:results} presents the primary verified mathematical theorems and their analytical reductions, followed by final considerations in Section~\ref{sec:conclusion}.
 
 % =========================================================================
-% 2. Background
+% 2. BACKGROUND
 % =========================================================================
 \section{Background}
 \label{sec:background}
-
-% [IMAGE PROMPT: A visual step-by-step timeline or data-flow diagram showing how an incompressible natural number n is decomposed into its largest prime factor p_m and quotient k, and why direct bit concatenation fails without a prefix-free header. Style: Technical schematic with clear bit-string boxes.]
 
 To establish lower bounds on the distribution of prime numbers through descriptive complexity, one must bridge discrete mathematics with algorithmic information theory~\cite{schoning1998gems, li2019introduction}. This section introduces the foundational intuition behind Kolmogorov complexity, the mathematical necessity of incompressible strings, and the structural challenges of encoding multiple integers into a single, uniquely decodable binary tape.
 
@@ -164,7 +162,6 @@ As formalized in the subsequent sections, substituting $\text{code}(\text{bin}(m
 % =========================================================================
 \section{Tools and Methodology}
 \label{sec:methodology}
-% Fluxo lógico: Descreve as escolhas de engenharia de software e de provas no Lean 4. Detalha a arquitetura modular dos 5 pacotes construídos: Basic.lean (ponte arimética via bin e decodeBin), SelfTerminatingCode.lean (códigos bar, code e code2), InfinitudePrimes.lean (ex. 9.1), PrimeReconstruction.lean (reconstrução p_m * k e redução analítica de p_m <= m log^2 m), e WeakPNT.lean (desigualdade da balança de bits e teto exponencial). Justifica o uso de provas explícitas baseadas em indução e táticas fundamentais em detrimento de metaprogramação opaca.
 
 Formalizing algorithmic number theory within an interactive theorem prover requires translating high-level, often informal mathematical intuition into strict, type-checked constructions. This work is implemented in \textsc{Lean 4}, an interactive theorem prover founded on dependent type theory and the Calculus of Inductive Constructions. The formalization builds upon two external repositories: \textsc{Mathlib}~\cite{mathlib2020}, which provides extensive coverage of elementary number theory, prime factorizations, and integer logarithms; and \textsc{Complexitylib} (part of the \textsc{CSLib} ecosystem), which provides abstract definitions of Kolmogorov complexity and description methods.
 
@@ -380,7 +377,7 @@ Table~\ref{tab:encoding_comparison} summarizes the verified quantitative progres
 To visualize the quantitative impact of these algorithmic refinements, Figure~\ref{fig:asymptotic_bounds} plots the derived upper bounds against the true distribution of primes. The graph illustrates how structurally compressing the prefix-free header translates directly into a tighter asymptotic envelope around the prime sequence, effectively forcing the theoretical upper bound closer to the ground truth.
 
 \subsection{The Exponential Bridge and the Weak Prime Number Theorem}
-To convert the logarithmic bit bound~\eqref{eq:compact_log_bound} into a direct numerical bound on the value of $p_m$, \texttt{WeakPNT.lean} establishes the exponential bridge theorem \texttt{value\_bound\_of\_log2\_compact\_bound}.
+To convert the logarithmic bit bound~\eqref{eq:compact_log_bound} into a direct numerical bound on the value of $p_m$, \texttt{WeakPNT.lean} establishes the exponential bridge theorem \\ \texttt{value\_bound\_of\_log2\_compact\_bound}.
 
 Step-by-step, the derivation begins with \textsc{Mathlib}'s fundamental power-of-two upper bound \texttt{Nat.lt\_log2\_self}, which states that every natural number $p$ is strictly smaller than the next power of two: $p < 2^{\lfloor\log_2 p\rfloor + 1}$. Adding $1$ to both sides of Inequality~\eqref{eq:compact_log_bound} (with $K = c + 4$) and applying base-2 exponentiation monotonicity (\texttt{Nat.pow\_le\_pow\_right}) yields:
 \begin{equation}
@@ -441,9 +438,6 @@ Beyond fulfilling the immediate scope of formalizing prime distribution bounds, 
 \end{itemize}
 
 Ultimately, this work demonstrates that modern interactive theorem provers like Lean 4 are no longer limited to verifying pure algebra or isolated software algorithms; they provide a mature, expressive environment capable of unifying discrete mathematics and algorithmic information theory with absolute mechanical certainty.
-
-
-
 
 % =========================================================================
 % REFERENCES
