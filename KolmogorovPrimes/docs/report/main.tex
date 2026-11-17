@@ -1,11 +1,9 @@
-%%
-%% Relatório Técnico - Padrão ACM Small (Journal Template)
-%% Tópico: Formalização de Limites de Primos via Complexidade de Kolmogorov em Lean 4
-%%
 \documentclass[acmsmall,natbib=false,nonacm]{acmart}
+
 \usepackage[alf]{abntex2cite}
 \AfterTheBibliography{\setlength{\itemsep}{0.5\baselineskip}}
 \usepackage{enumitem}
+\usepackage{amsmath}
 \setlist{itemsep=0.5em}
 
 \begin{document}
@@ -15,7 +13,7 @@
 
 \author{Gabriel Resende Machado}
 \affiliation{
-  \institution{INF2290 - Pontifical Catholic University of Rio de Janeiro}
+  \institution{INF2290 - Department of Informatics - Pontifical Catholic University of Rio de Janeiro}
   \city{Rio de Janeiro}
   \country{Brazil}}
 \email{gabriel.machado@puc-rio.br}
@@ -35,7 +33,7 @@ The algorithmic method of incompressibility provides an elegant information-theo
 \label{sec:introduction}
 % Fluxo lógico: Apresenta o problema dos limites inferiores de primos, a limitação das abordagens analíticas clássicas complexas e a elegância do método da incompressibilidade de Schöning & Pruim. Introduz o Lean 4 como ferramenta de verificação e expõe o hiato bibliográfico existente (o fato de a Complexitylib ser puramente sintática sobre listas de bits e a Mathlib carecer de códigos autodelimitados). Finaliza listando as três contribuições centrais do artigo.
 
-The distribution and infinity of prime numbers have challenged mathematicians since antiquity, representing one of the most resilient frontiers in number theory. While Euclid's classical theorem establishes that primes are infinite, understanding their asymptotic density, \textit{i.e.} how densely or sparsely they populate the number line as integers grow arbitrarily large, remains a central challenge in modern mathematics \cite{hardy2008introduction}. Traditional approaches to prime distribution rely heavily on complex analytical machinery, such as the Riemann zeta function or intricate elementary sieve methods, such as the Erdős-Selberg techniques \cite{}. These classical proofs, while mathematically deep, often obscure the fundamental information-theoretic reasons governing prime distribution. To bridge this gap, algorithmic information theory offers an alternative perspective through the method of incompressibility, originally popularized by \citeonline{kolmogorov1965}. The core challenge addressed by this work lies in formalizing and executing this method within interactive theorem provers, specifically Lean 4 \cite{moura2021lean}. 
+The distribution and infinity of prime numbers have challenged mathematicians since antiquity, representing one of the most resilient frontiers in number theory. While Euclid's classical theorem establishes that primes are infinite, understanding their asymptotic density, \textit{i.e.} how densely or sparsely they populate the number line as integers grow arbitrarily large, remains a central challenge in modern mathematics \cite{hardy2008introduction}. Traditional approaches to prime distribution rely heavily on complex analytical machinery, such as the Riemann zeta function or intricate elementary sieve methods, such as the Erdős-Selberg techniques \cite{erdos1949new, selberg1949elementary}. These classical proofs, while mathematically deep, often obscure the fundamental information-theoretic reasons governing prime distribution. To bridge this gap, algorithmic information theory offers an alternative perspective through the method of incompressibility, originally popularized by \citeonline{kolmogorov1965}. The core challenge addressed by this work lies in formalizing and executing this method within interactive theorem provers, specifically Lean 4 \cite{moura2021lean}. 
 
 Proving arithmetic lower bounds using descriptive complexity requires navigating a fundamental architectural barrier: while mathematical libraries (such as \textsc{Mathlib}) \cite{mathlib2020} provide robust number-theoretic structures, and complexity libraries (such as \textsc{Complexitylib}) \cite{complexitylib2026} formalize abstract string-based Kolmogorov complexity, \textbf{neither natively connects the arithmetic domain of integers with self-terminating, prefix-free binary codes. Without this bridge, one cannot measure how compressing arithmetic descriptions constrains the growth of prime numbers.} Building upon this framework, the general objective of this work is to establish a mechanically verified formalization in Lean 4 demonstrating that algorithmic incompressibility imposes non-trivial lower bounds on the distribution of prime numbers. To achieve this, the project breaks down into structured, progressive specific objectives: 
 
@@ -71,7 +69,7 @@ The remainder of this paper is structured as follows. Section~\ref{sec:backgroun
 To establish lower bounds on the distribution of prime numbers through descriptive complexity, one must bridge discrete mathematics with algorithmic information theory~\cite{schoning1998gems, li2019introduction}. This section introduces the foundational intuition behind Kolmogorov complexity, the mathematical necessity of incompressible strings, and the structural challenges of encoding multiple integers into a single, uniquely decodable binary tape.
 
 \subsection{Algorithmic Information Theory: Complexity as Data Compression}
-Rather than relying immediately on the rigid formalism of Turing machines, Kolmogorov complexity, independently developed by Solomonoff, Kolmogorov, and Chaitin~\cite{solomonoff1964formal, kolmogorov1965three, chaitin1966length}, can be understood intuitively as the ultimate limit of \textit{algorithmic data compression}. The central question it asks is: \textbf{what is the shortest possible self-contained description (or computer program) capable of generating a specific binary string} $x \in \{0, 1\}^*$\textbf{?} To grasp this concept step-by-step, consider two binary strings of the exact same length ($|x| = 1,000,000$ bits):
+Rather than relying immediately on the rigid formalism of Turing machines, Kolmogorov complexity, independently developed by Solomonoff, Kolmogorov, and Chaitin~\cite{solomonoff1964formal, kolmogorov1965three, chaitin1966length}, can be understood intuitively as the ultimate limit of \textit{algorithmic data compression}. \textbf{The central question it asks is: what is the shortest possible self-contained description (or computer program) capable of generating a specific binary string} $x \in \{0, 1\}^*$\textbf{?} To grasp this concept step-by-step, consider two binary strings of the exact same length ($|x| = 1,000,000$ bits):
 
 \begin{enumerate}
     \item \textbf{A Highly Structured String ($x_1$):} Suppose $x_1$ consists of the alternating pattern \texttt{0101...01} repeated $500,000$ times. One does not need to transmit a million bits to communicate $x_1$; instead, one can write a tiny loop instruction: \texttt{repeat "01" 500,000 times}. The number $500,000$ has a 19-bit binary representation, so the entire program describing $x_1$ takes only a few dozen bits. Thus, $x_1$ has low descriptive complexity.
@@ -168,21 +166,283 @@ As formalized in the subsequent sections, substituting $\text{code}(\text{bin}(m
 \label{sec:methodology}
 % Fluxo lógico: Descreve as escolhas de engenharia de software e de provas no Lean 4. Detalha a arquitetura modular dos 5 pacotes construídos: Basic.lean (ponte arimética via bin e decodeBin), SelfTerminatingCode.lean (códigos bar, code e code2), InfinitudePrimes.lean (ex. 9.1), PrimeReconstruction.lean (reconstrução p_m * k e redução analítica de p_m <= m log^2 m), e WeakPNT.lean (desigualdade da balança de bits e teto exponencial). Justifica o uso de provas explícitas baseadas em indução e táticas fundamentais em detrimento de metaprogramação opaca.
 
+Formalizing algorithmic number theory within an interactive theorem prover requires translating high-level, often informal mathematical intuition into strict, type-checked constructions. This work is implemented in \textsc{Lean 4}, an interactive theorem prover founded on dependent type theory and the Calculus of Inductive Constructions. The formalization builds upon two external repositories: \textsc{Mathlib}~\cite{mathlib2020}, which provides extensive coverage of elementary number theory, prime factorizations, and integer logarithms; and \textsc{Complexitylib} (part of the \textsc{CSLib} ecosystem), which provides abstract definitions of Kolmogorov complexity and description methods.
+
+Rather than relying on opaque metaprogramming or brute-force automation, the methodology prioritizes \textit{constructive, step-by-step proofs} using structural induction and explicit algebraic rewrites. As illustrated previously in Figure~\ref{fig:code_hierarchy}, the codebase is organized into four modular files totaling zero \texttt{sorry} axioms. The following subsections detail the architectural decisions and type-theoretic mechanisms implemented across each layer.
+
+\subsection{The Arithmetic-Information Bridge (\texttt{Basic.lean})}
+A foundational obstacle in connecting \textsc{Mathlib} with \textsc{Complexitylib} lies in data representation. In computer science libraries, fixed-length bitstrings of size $n$ are frequently modeled as functions from a finite type (\texttt{Fin n $\to$ Bool}). However, prefix-free encodings dynamically alter the length of a string depending on the numerical value of its input, causing dependent type parameters like \texttt{Fin (2 * n + 1)} to introduce severe type-casting friction (often referred to as ``dependent type hell'') during concatenation and structural induction.
+
+To eliminate this friction, our formalization standardizes on dynamic boolean lists, defining the type alias \texttt{BinWord := List Bool}. Bridging natural numbers ($\mathbb{N}$) and \texttt{BinWord} proceeds in three structured steps:
+\begin{enumerate}
+    \item \textbf{Canonical Little-Endian Encoding (\texttt{bin}):} An integer $n \in \mathbb{N}$ is mapped to \texttt{BinWord} via Lean's native \texttt{Nat.bits} function, which extracts binary digits from the least significant bit (LSB) to the most significant bit (MSB) using filtered binary recursion (\texttt{Nat.binaryRec'}). Under this convention, $0 \mapsto \texttt{[]}$ (the empty list), and every positive integer $n > 0$ ends with a most significant bit of \texttt{true}. For instance, $n = 6$ ($110_2$ in standard big-endian) is represented as \texttt{[false, true, true]} ($0 + 2^1 + 2^2 = 6$).
+    \item \textbf{Lossless Decoding and Injectivity (\texttt{decodeBin}):} The inverse function evaluates a \texttt{BinWord} via polynomial accumulation: $\text{decodeBin}(\texttt{[]}) = 0$ and $\text{decodeBin}(b :: bs) = \text{bit}(b) + 2 \cdot \text{decodeBin}(bs)$. Using binary induction, the module verifies the exact round-trip identity $\text{decodeBin}(\text{bin}(n)) = n$ (\texttt{decodeBin\_bin}), which immediately yields the injectivity of $\text{bin}$ (\texttt{bin\_injective}):
+    \begin{equation}
+        \forall n, m \in \mathbb{N}, \quad \text{bin}(n) = \text{bin}(m) \implies n = m.
+    \end{equation}
+    \item \textbf{Logarithmic Bit-Length Identities:} Because $\text{bin}(0) = \texttt{[]}$ has length $0$ while $\lfloor\log_2 0\rfloor = 0$ in \textsc{Mathlib}, the exact bit-length identity must distinguish positive integers from zero. For all $n \neq 0$, the module establishes the exact equality $|\text{bin}(n)| = \lfloor\log_2 n\rfloor + 1$ (\texttt{length\_bin\_pos}), alongside the universal upper bound $|\text{bin}(n)| \le \lfloor\log_2 n\rfloor + 1$ (\texttt{length\_bin\_le}) valid for all $n \in \mathbb{N}$.
+\end{enumerate}
+
+Finally, \texttt{Basic.lean} interfaces with \textsc{Complexitylib}'s \texttt{DescriptionMethod BinWord}. Because an arbitrary partial computation may fail to produce a valid program for a given target string, \textsc{Complexitylib} defines Kolmogorov complexity (\texttt{M.ecomplexity}) with values in the extended natural numbers $\mathbb{N}_\infty = \mathbb{N} \cup \{\infty\}$, denoted as \texttt{ENat} in Lean 4. Whenever a string $w$ is both incompressible and validly described by an encoded tape of finite length $L \in \mathbb{N}$, our methodology chains the inequalities in $\mathbb{N}_\infty$ and projects them back to standard arithmetic ($\mathbb{N}$) via the coercion isomorphism \texttt{ENat.coe\_le\_coe}:
+\begin{equation}
+    (|w| : \mathbb{N}_\infty) \le M.\text{ecomplexity}(w) \le (L : \mathbb{N}_\infty) \implies |w| \le L \quad \text{in } \mathbb{N}.
+\end{equation}
+
+\subsection{Constructive Self-Terminating Codes (\texttt{SelfTerminatingCode.lean})}
+In textbook expositions~\cite{schoning1998gems}, the elementary self-terminating code $\overline{w}$ of a non-empty string $w = b_1 b_2 \dots b_k$ is often defined by doubling every bit except the last, which is inverted ($b_1 b_1 b_2 b_2 \dots b_k \neg b_k$). In a formal proof assistant where functions must be \textit{total} over all inputs, this textbook convention exhibits two drawbacks: it is undefined on the empty string $\texttt{[]}$ (which represents $n = 0$), and it requires lookahead cases during list induction to detect whether an element is the final bit of the list.
+
+To achieve total, lookahead-free structural recursion, \texttt{SelfTerminatingCode.lean} implements the isomorphic \textit{flag-prefixed} construction:
+\begin{equation}
+    \text{bar}(\texttt{[]}) = \texttt{[true]}, \qquad \text{bar}(b :: bs) = \texttt{false} :: b :: \text{bar}(bs).
+\end{equation}
+Step-by-step, every data bit $b$ is preceded by a continuation flag \texttt{false} ($0$), and the end of the word is marked by a single stop flag \texttt{true} ($1$). This design guarantees three mechanical properties:
+\begin{enumerate}
+    \item \textbf{Total Length Identity:} For every $w \in \texttt{BinWord}$ (including $\texttt{[]}$), $|\text{bar}(w)| = 2|w| + 1$ (\texttt{length\_bar}).
+    \item \textbf{Single-Pass Prefix-Free Injectivity (\texttt{bar\_append\_inj}):} For any words $w_1, w_2$ and arbitrary suffixes $v_1, v_2$,
+    \begin{equation}
+        \text{bar}(w_1) \mathbin{+\!+} v_1 = \text{bar}(w_2) \mathbin{+\!+} v_2 \implies w_1 = w_2 \;\wedge\; v_1 = v_2.
+    \end{equation}
+    By induction on $w_1$: if both $w_1$ and $w_2$ are empty, both begin with the stop flag \texttt{true}, immediately aligning $v_1 = v_2$. If one is empty and the other is non-empty, the head bits collide (\texttt{true} $\neq$ \texttt{false}), discharging the impossible branch by contradiction. If both are non-empty, both start with $\texttt{false} :: b_i$, allowing Lean's constructor injectivity to peel off two bits at a time and apply the induction hypothesis.
+
+    \item \textbf{Compositional Code Hierarchy (\texttt{code} and \texttt{code2}):} Using $\text{bar}$ as a building block, the compact code is defined as $\text{code}(w) = \text{bar}(\text{bin}(|w|)) \mathbin{+\!+} w$, and the iterated code is defined as $\text{code}_2(w) = \text{code}(\text{bin}(|w|)) \mathbin{+\!+} w$. Because $\text{bar\_append\_inj}$ and $\text{bin\_injective}$ are already established, proving the unique decodability of $\text{code}$ (\texttt{code\_append\_inj}) requires zero additional induction: the proof simply extracts the header equality $\text{bin}(|w_1|) = \text{bin}(|w_2|)$, deduces $|w_1| = |w_2|$, and invokes \textsc{Mathlib}'s \texttt{List.append\_inj} to split the remaining suffix of equal-length words. The exact same compositional pattern verifies $\text{code}_2$ (\texttt{code2\_\allowbreak append\_\allowbreak inj}).
+\end{enumerate}
+
+The structural differences between these three encoding schemes directly dictate the asymptotic tightness of the resulting prime number bounds. To visualize the trade-off between algorithmic complexity and bit-length overhead, Figure~\ref{fig:code_hierarchy} illustrates the exact bit-level layout of the elementary, compact, and iterated codes. As the hierarchy deepens, the structural overhead is recursively compressed, shifting the bit-cost penalty from a linear expansion of the payload to a sub-logarithmic prefix header.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/hierarchy_of_self_terminating_codes.jpeg}
+  \caption{Structural comparison of the three formalized self-terminating binary encodings for a target word $w$ of length $L$. (1) The elementary code $\overline{w}$ doubles the payload size by interleaving continuation flags (zeros) and appending a final stop flag (one), resulting in $2L + 1$ bits. (2) The compact code $\text{code}(w)$ prefixes the raw payload with a self-terminating length header $\overline{\text{bin}(L)}$, reducing the total size to $L + 2\lfloor\log_2 L\rfloor + 3$ bits. (3) The iterated code $\text{code}_2(w)$ applies second-order compression to the length header itself, yielding an optimal asymptotic overhead of $\lfloor\log_2 L\rfloor + 2\lfloor\log_2\log_2 L\rfloor + O(1)$ bits without sacrificing unique decodability.}
+    \Description{A technical schematic titled 'Hierarchy of Self-Terminating Codes' comparing three bit layouts for a Target Word w of length L. The first layout, labeled '(1) Elementary Code', shows an alternating sequence of dark blue data bits and grey continuation flags labeled '0', ending with a gold stop flag '1', totaling 2L + 1 bits. The second layout, '(2) Compact Code', displays a grey block labeled 'Length Header' taking about 2 log2 L + 1 bits, followed by a dark blue block labeled 'Payload: w' taking L bits, for a total size of L + 2 floor(log2 L) + 3 bits. The third layout, '(3) Iterated Code', shows a sequence of three blocks: a gold 'Double Header' taking about 2 log2 log2 L bits, a light blue 'Length Index' taking about log2 L + 1 bits, and the dark blue 'Payload: w', resulting in a total size of L + floor(log2 L) + 2 floor(log2 log2 L) + O(1) bits.}
+  \label{fig:code_hierarchy}
+\end{figure}
+
+\subsection{Qualitative Compression via Exponent Tuples (\texttt{InfinitudePrimes.lean})}
+Before deriving quantitative density bounds, the methodology formalizes the qualitative proof of the infinitude of primes via exponent compression (Exercise 9.1 of Schöning and Pruim~\cite{schoning1998gems}). If there existed only $k$ primes $p_1, \dots, p_k$, any integer $n > 0$ would be uniquely determined by its list of $k$ factorization exponents $\mathit{es} = [e_1, \dots, e_k]$.
+
+Instead of building a heavy multidimensional tuple type, \texttt{InfinitudePrimes.lean} models the exponent sequence as a dynamic list \texttt{es : List $\mathbb{N}$} and encodes it recursively by mapping $\text{bar} \circ \text{bin}$ across each exponent:
+
+\begin{equation}
+  \centering
+  \begin{aligned}
+    &\text{encodeExponents}(\texttt{[]}) = \texttt{[]}, \\
+    &\text{encodeExponents}(e :: \mathit{es}) = \text{bar}(\text{bin}(e)) \mathbin{+\!+} \text{encodeExponents}(\mathit{es})
+  \end{aligned}
+\end{equation}
+
+Using induction over lists of equal length $k$, the module proves that $\text{encodeExponents}$ is strictly injective (\texttt{encodeExponents\_inj\_of\_length\_eq}) by repeatedly peeling off the head exponent via \texttt{bar\_append\_inj}. Furthermore, for any factor $p^e \mid n$ with $p \ge 2$ and $n > 0$, monotonicity of the base-2 logarithm over $2^e \le p^e \le n$ proves $e \le \lfloor\log_2 n\rfloor$ (\texttt{exponent\_le\_log2\_of\_pow\_dvd}). Summing the bit lengths across all $k$ exponents bounds the entire encoded tape by $k \cdot (2\lfloor\log_2\lfloor\log_2 n\rfloor\rfloor + 3)$ bits, which grows sub-linearly in $\lfloor\log_2 n\rfloor$ and contradicts the linear lower bound $\lfloor\log_2 n\rfloor + 1$ of an incompressible integer $n$.
+
+\subsection{Prime Factorization Reconstruction and Analytical Reduction (\texttt{PrimeReconstruction.lean})}
+To move from qualitative infinitude to quantitative lower bounds on the prime counting function $\pi(n)$, the fourth module establishes two independent pillars:
+\begin{enumerate}
+    \item \textbf{Injective Pair Reconstruction:} Using \textsc{Mathlib}'s \texttt{Nat.nth Nat.Prime}, we index the $m$-th prime as $\text{nthPrime}(m) = p_m$. Given any $n$ divisible by $p_m$, the quotient $k = n / p_m$ satisfies the exact multiplicative reconstruction $\text{reconstructFromPrime}(m, k) = p_m \cdot k = n$. The pair $(m, k)$ is packed into a single binary tape using either the compact code or the iterated code on the first component:
+    \begin{equation}
+        \begin{aligned}
+          \text{encodePairCode}(m, k) &= \text{code}(\text{bin}(m)) \mathbin{+\!+} \text{bin}(k), \\
+          \text{encodePairCode2}(m, k) &= \text{code}_2(\text{bin}(m)) \mathbin{+\!+} \text{bin}(k)
+        \end{aligned}
+    \end{equation}
+    Because the first segment is prefix-free and $\text{bin}$ is injective on both segments, the module proves that both pair encodings are globally injective (\texttt{encodePairCode\_inj} and \\
+    \texttt{encodePairCode2\_inj}).
+
+    \item \textbf{Analytical Inversion (From $p_m$ Upper Bounds to $\pi(n)$ Lower Bounds):} In number theory, bounding the $m$-th prime from above ($p_m \le C \cdot m \log_2^2 m$) is dual to bounding the prime counting function $m = \pi(n)$ from below ($m \ge \frac{n}{C \log_2^2 n}$). To verify this duality without passing through real-valued calculus, \texttt{PrimeReconstruction.lean} proves the discrete cross-multiplication reduction (\texttt{analytic\_reduction\_prime\_bound}): given $n \le p_m \le C \cdot m \cdot (\lfloor\log_2 m\rfloor)^2$ and the natural monotonicity $m \le n \implies \lfloor\log_2 m\rfloor \le \lfloor\log_2 n\rfloor$, chaining the inequalities yields $n \le C \cdot m \cdot (\lfloor\log_2 n\rfloor)^2$.
+\end{enumerate}
+
+\subsection{The Bit-Balance Engine and Exponential Bridge (\texttt{WeakPNT.lean})}
+The final module synthesizes the preceding layers to prove the Weak Prime Number Theorem. Two critical methodological decisions govern this file:
+
+First, when relating the bit length of $n = p_m \cdot k$ to the bit lengths of its factors $p_m$ and $k = n / p_m$, informal proofs write $\log_2(n / p_m) = \log_2 n - \log_2 p_m$. In discrete arithmetic over $\mathbb{N}$, floor division and integer logarithms do not commute with exact subtraction. Instead of approximating errors with real numbers, we exploit the \textit{exact superadditivity} of the floor base-2 logarithm (\texttt{add\_log2\_le\_log2\_mul}): because $2^{\lfloor\log_2 a\rfloor} \le a$ and $2^{\lfloor\log_2 b\rfloor} \le b$ for all $a, b \neq 0$, multiplying both inequalities gives $2^{\lfloor\log_2 a\rfloor + \lfloor\log_2 b\rfloor} \le a \cdot b$, which implies:
+\begin{equation}
+    \label{eq:log2_superadditivity}
+    \lfloor\log_2 p_m\rfloor + \lfloor\log_2 (n / p_m)\rfloor \le \lfloor\log_2 n\rfloor.
+\end{equation}
+This exact integer inequality allows the quotient term $\lfloor\log_2 (n / p_m)\rfloor$ to cancel cleanly against the upper bound $|\text{bin}(n / p_m)| \le \lfloor\log_2 (n / p_m)\rfloor + 1$ using Lean's linear integer arithmetic solver (\texttt{omega}).
+
+Second, rather than encoding a low-level Turing machine transition table to compute prime numbers inside \textsc{Complexitylib}, we decouple the \textit{information-theoretic injectivity} (which is proved mechanically in \texttt{PrimeReconstruction.lean}) from the \textit{machine execution overhead} via an explicit description hypothesis:
+\begin{equation}
+    \texttt{h\_desc} : M.\text{ecomplexity}(\text{bin}(n)) \le |\text{enc\_m} \mathbin{+\!+} \text{bin}(n / p_m)| + c.
+\end{equation}
+This architectural pattern—standard in formalizations of abstract computability—isolates the Church-Turing Invariance Theorem into a single transparent parameter $c \in \mathbb{N}$, allowing the Lean 4 kernel to verify 100\% of the algebraic, coding-theoretic, and logarithmic deductions without external axioms.
 
 % =========================================================================
 % 4. RESULTS
 % =========================================================================
-\section{Results and Mathematical Derivations}
-\label{sec:results}
-% Fluxo lógico: Apresenta formalmente os principais teoremas verificados no kernel do Lean 4. Mostra o Teorema Fundamental da Autodelimitação (injetividade de concatenação), o Teorema da Balança de Bits ($\log_2 p_m \le |\text{code}(m)|$), o Teorema Fraco dos Primos formalizado e sua ponte exponencial para valores numéricos ($p_m < 2^{c+5}(m+1)(\log_2 m + 2)^2$). Discute a não-vacuidade das hipóteses de incompressibilidade conectando-as à Tese de Church-Turing.
 
-% [IMAGE PROMPT: A comparative performance/growth chart or mathematical hierarchy diagram mapping the encoding overhead of bar, code, and code2 against the resulting tighter lower bounds on prime distributions. Style: Mathematical plot/diagram combo, professional LaTeX Beamer/journal aesthetic.]
+\section{Verified Results and Mathematical Derivations}
+\label{sec:results}
+
+This section presents the primary mathematical results mechanically verified within the Lean 4 kernel. All theorems discussed below compile without any unproved assumptions (\texttt{sorry}-free) and rely exclusively on the standard axioms of Lean's type theory. To maintain pedagogical clarity, each formal result is accompanied by its step-by-step deductive derivation and its exact correspondence in the codebase.
+
+\subsection{The Fundamental Theorem of Self-Terminating Concatenation}
+The entire algorithmic reconstruction rests upon the guarantee that concatenating an encoded prime index with a raw quotient bitsream causes zero information loss. In \texttt{SelfTerminatingCode.lean}, this guarantee is formalized as a cascade of three injectivity theorems: \texttt{bar\_append\_inj}, \\ \texttt{code\_append\_inj}, and \texttt{code2\_append\_inj}.
+
+\begin{theorem}[Compositional Prefix-Free Injectivity]
+\label{thm:prefix_free_inj}
+Let $C \in \{\text{bar}, \text{code}, \text{code}_2\}$ be any of the three formalized self-terminating encodings. For all binary words $w_1, w_2, v_1, v_2 \in \texttt{BinWord}$,
+\begin{equation}
+    C(w_1) \mathbin{+\!+} v_1 = C(w_2) \mathbin{+\!+} v_2 \implies w_1 = w_2 \;\wedge\; v_1 = v_2.
+\end{equation}
+\end{theorem}
+
+\begin{proof}[Mechanical Derivation]
+The verification proceeds hierarchically across the three encoding layers:
+\begin{enumerate}
+    \item \textbf{Base Layer ($\text{bar}$):} By structural induction on $w_1$ generalizing $w_2$. In the base case where $w_1 = \texttt{[]}$ and $w_2 = b :: bs$, the left-hand side starts with the stop flag \texttt{true} while the right-hand side starts with the continuation flag \texttt{false}, yielding a contradiction via constructor disjointness. When both words are non-empty ($w_1 = b_1 :: bs_1$ and $w_2 = b_2 :: bs_2$), list head cancellation extracts $b_1 = b_2$ and passes the remaining tail equation $\text{bar}(bs_1) \mathbin{+\!+} v_1 = \text{bar}(bs_2) \mathbin{+\!+} v_2$ to the induction hypothesis.
+    
+    \item \textbf{Compact Layer ($\text{code}$):} By unfolding $\text{code}(w_i) = \text{bar}(\text{bin}(|w_i|)) \mathbin{+\!+} w_i$ and reassociating list concatenation via \texttt{List.append\_assoc}, the hypothesis becomes:
+    \begin{equation*}
+        \text{bar}(\text{bin}(|w_1|)) \mathbin{+\!+} (w_1 \mathbin{+\!+} v_1) = \text{bar}(\text{bin}(|w_2|)) \mathbin{+\!+} (w_2 \mathbin{+\!+} v_2).
+    \end{equation*}
+    Applying the base layer (\texttt{bar\_append\_inj}) immediately separates the headers from the payloads: $\text{bin}(|w_1|) = \text{bin}(|w_2|)$ and $w_1 \mathbin{+\!+} v_1 = w_2 \mathbin{+\!+} v_2$. By the injectivity of binary encoding (\texttt{bin\_injective}), we obtain $|w_1| = |w_2|$. Because $w_1$ and $w_2$ share the exact same length, \textsc{Mathlib}'s \texttt{List.append\_inj} deterministically splits $w_1 \mathbin{+\!+} v_1 = w_2 \mathbin{+\!+} v_2$ into $w_1 = w_2$ and $v_1 = v_2$.
+    
+    \item \textbf{Iterated Layer ($\text{code}_2$):} Unfolding $\text{code}_2(w_i) = \text{code}(\text{bin}(|w_i|)) \mathbin{+\!+} w_i$ repeats the exact same algebraic reduction, invoking \texttt{code\_append\_inj} in place of \texttt{bar\_append\_inj}.
+\end{enumerate}
+\end{proof}
+
+Combining Theorem~\ref{thm:prefix_free_inj} with \texttt{bin\_injective} immediately validates \texttt{encodePairCode\_inj} and \texttt{encodePairCode2\_inj} in \texttt{PrimeReconstruction.lean}, confirming that the paired tape uniquely determines both the prime index $m$ and the quotient $k = n / p_m$.
+
+\subsection{The Core Bit-Balance Inequality}
+The pivotal link between \textsc{Complexitylib} and prime factorizations is established in \texttt{WeakPNT.lean} via the theorem \texttt{log2\_nthPrime\_le\_code\_length}. Rather than hardcoding a specific prefix-free scheme, this theorem is parameterized over an arbitrary encoding word $\text{enc\_m} \in \texttt{BinWord}$ representing the index $m$.
+
+\begin{theorem}[Core Bit-Balance Inequality]
+\label{thm:bit_balance}
+Let $M : \texttt{DescriptionMethod BinWord}$ be an abstract description method, and let $n, m, c \in \mathbb{N}$ with $n \neq 0$, $p_m \neq 0$, $n / p_m \neq 0$, and $p_m \mid n$. If $\text{bin}(n)$ is Kolmogorov-incompressible ($|\text{bin}(n)| \le M.\text{ecomplexity}(\text{bin}(n))$) and can be described by concatenating an encoding $\text{enc\_m}$ with the quotient $\text{bin}(n / p_m)$ up to machine overhead $c$:
+\begin{equation}
+    M.\text{ecomplexity}(\text{bin}(n)) \le |\text{enc\_m} \mathbin{+\!+} \text{bin}(n / p_m)| + c,
+\end{equation}
+then the base-2 logarithm of the $m$-th prime is bounded above by the length of the index code:
+\begin{equation}
+    \label{eq:core_bit_balance}
+    \lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c.
+\end{equation}
+\end{theorem}
+
+\begin{proof}[Step-by-Step Derivation]
+The formal proof executes a six-step integer reduction:
+\begin{enumerate}
+    \item \textbf{Chaining in $\mathbb{N}_\infty$:} By transitivity (\texttt{le\_trans}) over the extended naturals \texttt{ENat}, the incompressibility lower bound and the description upper bound combine into:
+    \begin{equation*}
+        (|\text{bin}(n)| : \mathbb{N}_\infty) \le (|\text{enc\_m} \mathbin{+\!+} \text{bin}(n / p_m)| + c : \mathbb{N}_\infty).
+    \end{equation*}
+    \item \textbf{Projection to $\mathbb{N}$:} Applying the coercion equivalence \texttt{ENat.coe\_le\_coe.mp} strips the $\mathbb{N}_\infty$ wrapper, yielding a pure natural number inequality.
+    \item \textbf{Exact Bit-Length Expansion:} Because $n \neq 0$, \texttt{length\_bin\_pos} rewrites the left-hand side to $|\text{bin}(n)| = \lfloor\log_2 n\rfloor + 1$, while \texttt{List.length\_append} expands the right-hand side to $|\text{enc\_m}| + |\text{bin}(n / p_m)| + c$.
+    \item \textbf{Quotient Bit Bound:} By \texttt{length\_bin\_le}, the binary length of the quotient satisfies $|\text{bin}(n / p_m)| \le \lfloor\log_2(n / p_m)\rfloor + 1$. Substituting this into Step 3 gives:
+    \begin{equation*}
+        \lfloor\log_2 n\rfloor + 1 \le |\text{enc\_m}| + \lfloor\log_2(n / p_m)\rfloor + 1 + c.
+    \end{equation*}
+    \item \textbf{Logarithmic Superadditivity:} Because $p_m \mid n$, we have $p_m \cdot (n / p_m) = n$. Applying our exact integer superadditivity lemma (\texttt{add\_log2\_div\_le\_log2}) bounds the left-hand side from below:
+    \begin{equation*}
+        \lfloor\log_2 p_m\rfloor + \lfloor\log_2(n / p_m)\rfloor + 1 \le \lfloor\log_2 n\rfloor + 1 \le |\text{enc\_m}| + \lfloor\log_2(n / p_m)\rfloor + 1 + c.
+    \end{equation*}
+    \item \textbf{Cancellation:} The shared term $\lfloor\log_2(n / p_m)\rfloor + 1$ appears identically on both the far left and far right. Discharging the linear system via Lean's \texttt{omega} solver cancels the quotient bits completely, leaving $\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$.
+\end{enumerate}
+\end{proof}
+
+Notice the physical meaning of Theorem~\ref{thm:bit_balance}: when $n$ is divided by $p_m$, the binary representation of $n$ shrinks by at least $\lfloor\log_2 p_m\rfloor$ bits. Because $n$ is incompressible, the replacement header $\text{enc\_m}$ must be at least as large as the bits saved by division (up to constant $c$).
+
+\subsection{Logarithmic Prime Bounds and Iterated Refinements}
+With Theorem~\ref{thm:bit_balance} established as a modular interface, deriving the specific bounds requires no further reasoning about prime divisibility or \texttt{ENat} coercions. It simply instantiates $\text{enc\_m}$ with $\text{code}(\text{bin}(m))$ and $\text{code}_2(\text{bin}(m))$ and applies monotonicity of $\lfloor\log_2 \cdot\rfloor$ (\texttt{Nat.log\_mono\_right}).
+
+\begin{itemize}
+    \item \textbf{Compact Code Instantiation (\texttt{log2\_nthPrime\_le\_compact\_code}):} Substituting \\ $|\text{code}(\text{bin}(m))| \le |\text{bin}(m)| + 2\lfloor\log_2|\text{bin}(m)|\rfloor + 3$ and $|\text{bin}(m)| \le \lfloor\log_2 m\rfloor + 1$ into Inequality~\eqref{eq:core_bit_balance} yields:
+    \begin{equation}
+        \label{eq:compact_log_bound}
+        \lfloor\log_2 p_m\rfloor \le \lfloor\log_2 m\rfloor + 2\lfloor\log_2(\lfloor\log_2 m\rfloor + 1)\rfloor + c + 4.
+    \end{equation}
+    \item \textbf{Iterated Code Instantiation (\texttt{log2\_nthPrime\_le\_iterated\_code}):} Substituting the doubly compressed code $\text{code}_2(\text{bin}(m))$ halves the coefficient of the second-order $\log_2 \log_2 m$ term at the expense of a third-order $\log_2 \log_2 \log_2 m$ term:
+    \begin{equation}
+        \label{eq:iterated_log_bound}
+        \lfloor\log_2 p_m\rfloor \le \lfloor\log_2 m\rfloor + \lfloor\log_2(\lfloor\log_2 m\rfloor + 1)\rfloor + 2\lfloor\log_2(\lfloor\log_2(\lfloor\log_2 m\rfloor + 1)\rfloor + 1)\rfloor + c + 5.
+    \end{equation}
+\end{itemize}
+
+Table~\ref{tab:encoding_comparison} summarizes the verified quantitative progression across all formalized encoding schemes in our repository.
+
+\begin{table}[htbp]
+\centering
+\caption{Quantitative comparison of the formalized self-terminating encodings, their verified bit-length upper bounds for an index $m$, and the resulting asymptotic upper bounds on the $m$-th prime $p_m$. For brevity, $\ell(x) = \lfloor\log_2 x\rfloor$, so that $|\text{bin}(m)| \le \ell(m) + 1$.}
+\label{tab:encoding_comparison}
+\begin{tabular}{@{}lll@{}}
+\toprule
+\begin{tabular}[b]{@{}l@{}}\textbf{Encoding Scheme}\\ \textbf{(Lean 4 Definition)}\end{tabular} &
+\begin{tabular}[b]{@{}l@{}}\textbf{Verified Codeword}\\ \textbf{Length Bound}\end{tabular} &
+\begin{tabular}[b]{@{}l@{}}\textbf{Implied Bound}\\ \textbf{on $p_m$}\end{tabular} \\
+\midrule
+\begin{tabular}[t]{@{}l@{}}Elementary ($\overline{w}$)\\ \texttt{bar (bin m)}\end{tabular} & $2\ell(m) + 3$ & $O(m^2)$ \\
+\addlinespace
+\begin{tabular}[t]{@{}l@{}}Compact ($\text{code}$)\\ \texttt{code (bin m)}\end{tabular} & $\ell(m) + 2\ell(\ell(m) + 1) + 4$ & $O(m \log_2^2 m)$ \\
+\addlinespace
+\begin{tabular}[t]{@{}l@{}}Iterated ($\text{code}_2$)\\ \texttt{code2 (bin m)}\end{tabular} & $\ell(m) + \ell(\ell(m)) + 2\ell(\ell(\ell(m))) + 5$ & $O(m \log_2 m (\log_2\log_2 m)^2)$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+To visualize the quantitative impact of these algorithmic refinements, Figure~\ref{fig:asymptotic_bounds} plots the derived upper bounds against the true distribution of primes. The graph illustrates how structurally compressing the prefix-free header translates directly into a tighter asymptotic envelope around the prime sequence, effectively forcing the theoretical upper bound closer to the ground truth.
+
+\subsection{The Exponential Bridge and the Weak Prime Number Theorem}
+To convert the logarithmic bit bound~\eqref{eq:compact_log_bound} into a direct numerical bound on the value of $p_m$, \texttt{WeakPNT.lean} establishes the exponential bridge theorem \texttt{value\_bound\_of\_log2\_compact\_bound}.
+
+Step-by-step, the derivation begins with \textsc{Mathlib}'s fundamental power-of-two upper bound \texttt{Nat.lt\_log2\_self}, which states that every natural number $p$ is strictly smaller than the next power of two: $p < 2^{\lfloor\log_2 p\rfloor + 1}$. Adding $1$ to both sides of Inequality~\eqref{eq:compact_log_bound} (with $K = c + 4$) and applying base-2 exponentiation monotonicity (\texttt{Nat.pow\_le\_pow\_right}) yields:
+\begin{equation}
+    p_m < 2^{\lfloor\log_2 p_m\rfloor + 1} \le 2^{\lfloor\log_2 m\rfloor + 2\lfloor\log_2(\lfloor\log_2 m\rfloor + 1)\rfloor + K + 1}.
+\end{equation}
+Using the exponent addition laws (\texttt{Nat.pow\_add} and \texttt{Nat.pow\_mul}), the right-hand side factors into a product of three powers of two:
+\begin{equation}
+    2^{K + 1} \cdot 2^{\lfloor\log_2 m\rfloor} \cdot \left(2^{\lfloor\log_2(\lfloor\log_2 m\rfloor + 1)\rfloor}\right)^2.
+\end{equation}
+To bound $2^{\lfloor\log_2 x\rfloor}$ for arbitrary $x \in \mathbb{N}$ without proliferating $x \neq 0$ side conditions, we apply our total helper lemma \texttt{two\_pow\_log2\_le\_succ} ($2^{\lfloor\log_2 x\rfloor} \le x + 1$), arriving at the fully verified polynomial bound (\texttt{nthPrime\_lt\_compact\_code\_bound}):
+\begin{equation}
+    \label{eq:value_prime_bound}
+    p_m < 2^{c + 5} \cdot (m + 1) \cdot (\lfloor\log_2 m\rfloor + 2)^2.
+\end{equation}
+
+Finally, combining this upper bound on $p_m$ with the analytical reduction theorem \\ \texttt{analytic\_reduction\_prime\_bound} from \texttt{PrimeReconstruction.lean} completes the Weak Prime Number Theorem: for any $n$ bounded by $p_m$ (where $m = \pi(n)$ counts the primes up to $n$) satisfying $p_m \le C \cdot m \cdot (\lfloor\log_2 m\rfloor)^2$ with $m \le n$, monotonic replacement of $\lfloor\log_2 m\rfloor$ by $\lfloor\log_2 n\rfloor$ proves:
+\begin{equation}
+    n \le C \cdot \pi(n) \cdot (\lfloor\log_2 n\rfloor)^2 \quad \Longleftrightarrow \quad \pi(n) \ge \frac{n}{C (\lfloor\log_2 n\rfloor)^2}.
+\end{equation}
+
+\subsection{Non-Vacuity of Hypotheses and the Church-Turing Interface}
+A critical methodological question in formal verification is whether conditional theorems are non-vacuous—that is, ensuring the hypotheses of Theorem~\ref{thm:bit_balance} are simultaneously satisfiable so that the implication does not hold trivially from \texttt{False}. Our formalization guarantees non-vacuity through two complementary mechanisms:
+\begin{enumerate}
+    \item \textbf{Existence of Incompressible Words (\texttt{h\_incomp}):} In \texttt{Basic.lean}, the theorem \\ \texttt{exists\_incompressible\_word} invokes \textsc{Complexitylib}'s pigeonhole counting argument over finite bitstrings to prove mechanically that for every description method $M$ and every length $\ell \in \mathbb{N}$, there exists a binary word $w$ of length $\ell$ satisfying $(|w| : \mathbb{N}_\infty) \le M.\text{ecomplexity}(w)$.
+    \item \textbf{Constructive Justification of the Description Overhead (\texttt{h\_desc}):} In \textsc{Complexitylib}, a \texttt{DescriptionMethod BinWord} is an arbitrary partial function $\texttt{BinWord} \to \texttt{Part BinWord}$ rather than a concrete Turing machine model. Because an arbitrary partial function need not be universal, it does not automatically possess a compiler for multiplication or prime enumeration. However, our formalization proves mechanically that the mapping $(m, k) \mapsto \text{encodePairCode}(m, k)$ is globally injective (\texttt{encodePairCode\_inj}) and that \\ $\text{reconstructFromPrime}(m, n / p_m) = n$ (\texttt{reconstructFromPrime\_div}). By the Church-Turing Thesis and the Invariance Theorem~\cite{li2019introduction}, whenever $M$ is instantiated as an optimal universal description method, the partial computable decompressor that parses $\text{encodePairCode}(m, n / p_m)$, computes the $m$-th prime $p_m$, and multiplies $p_m \cdot (n / p_m) = n$ adds only a fixed program header of $c$ bits.
+\end{enumerate}
+
+By isolating this universal machine overhead into the explicit parameter $c$ inside \texttt{h\_desc}, our formalization achieves complete separation of concerns: the computability postulate is stated transparently in the theorem signature, while 100\% of the number-theoretic, logarithmic, and coding-theoretic deductions are machine-checked inside Lean 4.
+
+\begin{figure}[h!]
+  \centering
+  \includegraphics[width=0.9\textwidth]{figures/asymptotic_bounds.jpeg}
+  \caption{Visual comparison of the asymptotic upper bounds on the $m$-th prime number $p_m$ derived from the three formalized self-terminating encodings. The outermost quadratic bound $O(m^2)$ (light blue) results from the elementary bit-doubling code $\overline{w}$. The intermediate bound $O(m \log_2^2 m)$ (slate blue) corresponds to the compact code $\text{code}(w)$, which yields the Weak Prime Number Theorem. The tightest formalized bound $O(m \log_2 m (\log_2\log_2 m)^2)$ (gold) is achieved via the iterated code $\text{code}_2(w)$, closely trailing the exact prime sequence (dashed baseline).}
+    \Description{A line graph titled 'Asymptotic Tightening of Prime Number Bounds' plotting the value of the m-th prime number on the y-axis against its index m on the x-axis. The graph features a dashed line at the bottom representing the 'Actual Primes p_m' (Ground Truth). Above it are three solid curves representing theoretical upper bounds. The highest curve, in light blue, represents the Elementary code quadratic bound O(m^2). Below it, in slate blue, is the Compact code bound O(m log^2 m). The lowest solid curve, in gold, represents the Iterated code bound O(m log m (log log m)^2), which sits closest to the dashed ground truth line. Text annotations point out that the shrinking overhead prefix causes the bounds to tighten downward toward the actual primes.}
+  \label{fig:asymptotic_bounds}
+\end{figure}
+
 % =========================================================================
-% 5. CONCLUDING REMARKS
+% 5. FINAL CONSIDERATIONS
 % =========================================================================
 \section{Final Considerations}
 \label{sec:conclusion}
-% Fluxo lógico: Sintetiza as conquistas do trabalho (formalização completa livre de sorry, integração bem-sucedida entre Complexitylib e Mathlib). Aponta direções futuras, como a substituição das hipóteses de máquina abstrata por uma Máquina de Turing universal explícita na CSLib, servindo de base para investigações avançadas em complexidade descritiva.
+
+Understanding the asymptotic distribution of prime numbers through the lens of algorithmic information theory offers a profound alternative to classical analytic number theory, revealing that prime density is fundamentally governed by the limits of lossless data compression. However, translating the informal incompressibility arguments of Schöning and Pruim~\cite{schoning1998gems} into a mechanically verified proof exposes a significant foundational divide: standard mathematical libraries such as \textsc{Mathlib}~\cite{mathlib2020} excel at arithmetic and prime factorization but lack notions of descriptive complexity, whereas theoretical computer science libraries such as \textsc{Complexitylib} model abstract string complexity without native connections to integer representation or prefix-free coding. The primary objective of this work was to bridge this architectural divide in \textbf{Lean 4}~\cite{moura2021lean}, establishing a completely verified, axiom-free pipeline from elementary bit manipulation to quantitative lower bounds on the prime counting function $\pi(n)$.
+
+This objective has been fully realized across a modular, five-layer formalization containing zero \texttt{sorry} placeholders:
+\begin{enumerate}
+    \item \textbf{Seamless Library Integration:} By standardizing on dynamic little-endian boolean lists (\texttt{BinWord}) in \texttt{Basic.lean}, the formalization successfully linked \textsc{Mathlib}'s arithmetic primitives (\texttt{Nat.bits}, \texttt{Nat.log}) with \textsc{Complexitylib}'s extended natural number complexity measure (\texttt{ENat}), avoiding the dependent-type friction of fixed-length bit vectors.
+    \item \textbf{Constructive Prefix-Free Hierarchy:} In \texttt{SelfTerminatingCode.lean}, the textbook bit-doubling scheme was redesigned into a total, flag-prefixed structural recursion ($\text{bar}$), enabling compositional, induction-free injectivity proofs for both compact ($\text{code}$) and iterated ($\text{code}_2$) length-prefixed codes.
+    \item \textbf{Mechanically Verified Number-Theoretic Bounds:} Across \texttt{InfinitudePrimes.lean}, \texttt{PrimeReconstruction.lean}, and \texttt{WeakPNT.lean}, the project mechanically verified the qualitative infinitude of primes via exponent compression, the core bit-balance inequality ($\lfloor\log_2 p_m\rfloor \le |\text{enc\_m}| + c$) via exact integer logarithm superadditivity, the Weak Prime Number Theorem ($p_m = O(m \log_2^2 m)$), and its iterated refinement \\ ($p_m = O(m \log_2 m (\log_2 \log_2 m)^2)$).
+\end{enumerate}
+
+Beyond fulfilling the immediate scope of formalizing prime distribution bounds, the infrastructure developed in this repository opens several high-impact avenues for future research suitable for publication in premier formal verification venues such as \textit{ACM SIGPLAN Certified Programs and Proofs (CPP)}, \textit{Interactive Theorem Proving (ITP)}, and the \textit{Journal of Automated Reasoning (JAR)}:
+\begin{itemize}
+    \item \textbf{Arbitrary-Depth Elias Omega Coding and the $k$-th Iterated Bound:} In the current formalization, the transition from $\text{code}$ to $\text{code}_2$ was constructed explicitly. A natural next step is to formalize Peter Elias's recursive $\omega$-code~\cite{elias1975universal}, which iterates length-prefixing until the header length reaches $1$. Mechanically verifying the prefix-free injectivity and asymptotic bit length of Elias $\omega$-coding in Lean 4 would allow a single unified theorem establishing the arbitrary $k$-th iterated prime bound $p_m = O(m \log_2 m \log_2^{(2)} m \cdots (\log_2^{(k)} m)^2)$, pushing the information-theoretic method to its theoretical limit.
+    \item \textbf{Concrete Instantiation of the Invariance Theorem in \textsc{CSLib}:} Our formalization deliberately isolated the Church-Turing machine execution overhead into the explicit hypothesis \texttt{h\_desc}. A major foundational contribution to \textsc{Complexitylib} and \textsc{CSLib} would be to construct a concrete register machine or $\lambda$-calculus interpreter inside Lean 4, prove the Universal Invariance Theorem mechanically, and discharge \texttt{h\_desc} by synthesizing the explicit binary compiler for $\text{reconstructFromPrime}(m, k) = p_m \cdot k$.
+    \item \textbf{A General Incompressibility Framework for Combinatorics and Complexity:} The bit-balance methodology formalized here is not restricted to number theory. By abstracting our prefix-free pairing and pigeonhole incompressibility lemmas into a reusable \textsc{Mathlib}/\textsc{CSLib} tactic or library module, researchers can systematically formalize landmark results across theoretical computer science—including lower bounds on Ramsey numbers, tournament graphs, formal language pumping lemmas, and Boolean circuit complexity~\cite{li2019introduction}.
+\end{itemize}
+
+Ultimately, this work demonstrates that modern interactive theorem provers like Lean 4 are no longer limited to verifying pure algebra or isolated software algorithms; they provide a mature, expressive environment capable of unifying discrete mathematics and algorithmic information theory with absolute mechanical certainty.
+
+
 
 
 % =========================================================================
