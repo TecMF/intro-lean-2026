@@ -16,11 +16,16 @@ While `Complexitylib` formalizes plain Kolmogorov complexity (`DescriptionMethod
 
 1. **Arithmetic-Information Bridge (`Basic.lean`):** Connects canonical binary representations of natural numbers (`Nat.bits` / `bin`) to `List Bool` (`BinWord`), proving injectivity via an explicit left-inverse decoder (`decodeBin`) and establishing the exact logarithmic bit-length identity $\vert{}\text{bin}(n)\vert{} = \lfloor\log_2 n\rfloor + 1$ for $n > 0$.
 2. **Constructive Hierarchy of Self-Terminating Codes (`SelfTerminatingCode.lean`):** Formalizes three prefix-free encoding schemes to concatenate pairs of integers without boundary ambiguity:
-   * **Elementary Bit-Doubling Code (`bar`):** $\vert{}\overline{w}\vert{} = 2\vert{}w\vert{} + 1$.
-   * **Compact Length-Prefixed Code (`code`):** $\text{code}(w) = \overline{\text{bin}(\vert{}w\vert{})}w$, with $\vert{}\text{code}(w)\vert{} \le \vert{}w\vert{} + 2\lfloor\log_2 \vert{}w\vert{}\rfloor + 3$.
+   * **Elementary Bit-Doubling Code (`bar`):** $\vert{}\overline{w}\vert{} = 2\vert{}w\vert{} + 1$;
+   * **Compact Length-Prefixed Code (`code`):** $\text{code}(w) = \overline{\text{bin}(\vert{}w\vert{})}w$, with $\vert{}\text{code}(w)\vert{} \le \vert{}w\vert{} + 2\lfloor\log_2 \vert{}w\vert{}\rfloor + 3$;
    * **Iterated Length-Prefixed Code (`code2`):** $\text{code}_2(w) = \text{code}(\text{bin}(\vert{}w\vert{}))w$, reducing header overhead to $\lfloor\log_2 \vert{}w\vert{}\rfloor + 2\lfloor\log_2(\lfloor\log_2 \vert{}w\vert{}\rfloor + 1)\rfloor + 4$.
    * Includes full mechanical proofs of unique decodability (`bar_append_inj`, `code_append_inj`, `code2_append_inj`).
-3. **Information-to-Density Transfer for Primes (`InfinitudePrimes.lean`, `PrimeReconstruction.lean`, `WeakPNT.lean`):** Proves that improvements in prefix-free code compactness translate directly into stronger lower bounds on the prime-counting function $\pi(n)$, progressing from qualitative infinitude to the Weak Prime Number Theorem ($p_m < 2^{c+5}(m+1)(\lfloor\log_2 m\rfloor + 2)^2$).
+3. **Information-to-Density Transfer for Primes (`InfinitudePrimes.lean`, `PrimeReconstruction.lean`, `WeakPNT.lean`):** Proves that improvements in prefix-free code compactness translate directly into stronger lower bounds on the prime-counting function $\pi(n)$, progressing from qualitative infinitude to the Weak Prime Number Theorem ($p_m < 2^{c+5}(m+1)(\lfloor\log_2 m\rfloor + 2)^2$);
+4. **[Technical Report](docs/report/main.pdf) (ACM format):** A short paper that walks through the formalization step by step:
+   * **Motivation:** the gap between Mathlib (arithmetic) and Complexitylib (string complexity), plus the architecture of the five Lean modules;
+   * **Background:** Kolmogorov complexity as compression, incompressibility via the Pigeonhole Principle, and why concatenating encodings requires prefix-free (self-terminating) codes;
+   * **Methodology & Results:** a module-by-module tour culminating in the Core Bit-Balance Inequality, the Weak PNT ($p_m = O(m \log^2 m)$), and its iterated refinement ($p_m = O(m \log m (\log\log m)^2)$), including how the computability assumption is isolated in the explicit constant $c$ (`h_desc`);
+   * **Future Work:** Elias $\omega$-coding for arbitrary-depth bounds, a concrete Invariance Theorem in CSLib, and a reusable incompressibility framework.
 
 ---
 
