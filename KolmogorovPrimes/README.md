@@ -6,15 +6,22 @@
 
 ## Main Objective
 
-The main goal of this project is the **first complete, step-by-step, `sorry`-free formalization in Lean 4** of three things: the **Incompressibility Method**, the **Weak Prime Number Theorem**, and its **iterated logarithmic refinement**. The work follows Schöning & Pruim, [*Gems of Theoretical Computer Science*, Topic 9](docs/references/schoning_topic9_kolmogorov_complexity.pdf), Exercises 9.1–9.5:
+The main objective of this project is to **prove the Weak Prime Number Theorem (Weak PNT) in Lean 4** using the **Incompressibility Method** from Kolmogorov complexity. The proof is complete, step by step, and sorry-free:
 
 $$
-\pi(n) \ge \frac{n}{C\,(\log_2 n)^2} \quad\Longleftrightarrow\quad p_m \le C \cdot m\,(\log_2 m)^2,
-\quad\text{refined to} \\
-p_m = \mathcal{O}\big(m \log_2 m\,(\log_2\log_2 m)^2\big).
+\pi(n) \ge \frac{n}{C\,(\log_2 n)^2} \quad\Longleftrightarrow\quad p_m \le C \cdot m\,(\log_2 m)^2.
 $$
 
-The argument is a **"proof by decompressor"**. Factor an incompressible integer $n$ as $n = p_m \cdot k$. Then $n$ can be described by the pair $\langle m, k\rangle$ alone. If primes were scarce, $m$ would be small, so this pair would compress $n$ below its Kolmogorov complexity, which is a contradiction. The textbook presents this argument as a semi-formal sketch. It glosses over boundary ambiguity when bit strings are concatenated, and it uses real-valued identities such as $\log_2(n/p) = \log_2 n - \log_2 p$. This project checks every one of those steps mechanically.
+The formalization follows the incompressibility argument in its primary reference, Schöning & Pruim, [*Gems of Theoretical Computer Science*, Topic 9](docs/references/schoning_topic9_kolmogorov_complexity.pdf). The argument is a **"proof by decompressor"**. An incompressible integer $n$ is factored as $n = p_m \cdot k$, so $n$ is fully described by the pair $\langle m, k\rangle$. If primes were scarce, the index $m$ would be small, and the pair would compress $n$ below its Kolmogorov complexity, which is a contradiction. In the literature, this argument usually appears as a semi-formal sketch. The sketch glosses over boundary ambiguity when bit strings are concatenated, and it relies on real-valued identities such as $\log_2(n/p) = \log_2 n - \log_2 p$. The formalization checks each of these steps mechanically.
+
+Proving the Weak PNT required building several intermediate components in Lean 4 (detailed under [Key Contributions](#key-contributions)):
+
+1. an arithmetic–information bridge between natural numbers and binary words;
+2. a hierarchy of prefix-free (self-terminating) codes with verified unique decodability;
+3. the injective reconstruction $n = p_m \cdot k$ and the discrete reduction from bounds on $p_m$ to bounds on $\pi(n)$;
+4. the Core Bit-Balance Inequality, which links Kolmogorov incompressibility to the bit length of the prime index.
+
+With the same machinery, the formalization also proves the **iterated refinement** $p_m = \mathcal{O}\big(m \log_2 m\,(\log_2\log_2 m)^2\big)$, which comes from compressing the prefix-free header a second time.
 
 Developed as the final project for **INF2290 (Formalization in Lean)** at **PUC-Rio**.
 
@@ -35,11 +42,11 @@ Building a `sorry`-free bridge between them required solving three problems:
 
 ## Key Contributions
 
-1. **Complete Weak PNT Formalization (`InfinitudePrimes.lean`, `PrimeReconstruction.lean`, `WeakPNT.lean`):** A mechanical verification of the Schöning & Pruim exercises, with zero `sorry`:
-   * **Exercise 9.1:** infinitude of primes via exponent-tuple compression;
-   * **Exercises 9.2–9.3:** the discrete analytic reduction from upper bounds on $p_m$ to lower bounds on $\pi(n)$;
-   * **Exercise 9.4:** the Core Bit-Balance Inequality $\lfloor\log_2 p_m\rfloor \le \vert\text{enc}_m\vert + c$ and the explicit Weak PNT bound $p_m < 2^{c+5}(m+1)(\lfloor\log_2 m\rfloor + 2)^2$, i.e. $\pi(n) = \Omega(n/\log_2^2 n)$;
-   * **Exercise 9.5:** the iterated refinement $p_m = \mathcal{O}(m \log_2 m (\log_2\log_2 m)^2)$.
+1. **Complete Weak PNT Formalization (`InfinitudePrimes.lean`, `PrimeReconstruction.lean`, `WeakPNT.lean`):** A mechanical, `sorry`-free proof that builds up to the Weak PNT in four steps:
+   * **Qualitative warm-up:** infinitude of primes via exponent-tuple compression;
+   * **Analytic reduction:** a discrete proof that upper bounds on $p_m$ transfer to lower bounds on $\pi(n)$, with no real-valued calculus;
+   * **Weak PNT:** the Core Bit-Balance Inequality $\lfloor\log_2 p_m\rfloor \le \vert\text{enc}_m\vert + c$, which yields the explicit bound $p_m < 2^{c+5}(m+1)(\lfloor\log_2 m\rfloor + 2)^2$, i.e. $\pi(n) = \Omega(n/\log_2^2 n)$;
+   * **Iterated refinement:** $p_m = \mathcal{O}(m \log_2 m (\log_2\log_2 m)^2)$, obtained from the iterated prefix-free code.
 2. **Constructive Hierarchy of Self-Terminating Codes (`SelfTerminatingCode.lean`):** Three prefix-free encoding schemes that let two integers share one binary tape without boundary ambiguity:
    * **Elementary Bit-Doubling Code (`bar`):** a total, lookahead-free flag-prefixed construction with $\vert{}\overline{w}\vert{} = 2\vert{}w\vert{} + 1$;
    * **Compact Length-Prefixed Code (`code`):** $\text{code}(w) = \overline{\text{bin}(\vert{}w\vert{})}w$, with $\vert{}\text{code}(w)\vert{} \le \vert{}w\vert{} + 2\lfloor\log_2 \vert{}w\vert{}\rfloor + 3$;
