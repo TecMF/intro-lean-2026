@@ -99,10 +99,10 @@
 
 % --- Metadados da Apresentação (Formatação nativa idêntica à capa do PDF) ---
 \title[Weak PNT via Kolmogorov em Lean 4]{Formalizando o Teorema Fraco dos Números Primos e seus Refinamentos Iterados via Complexidade de Kolmogorov}
-\subtitle{\small{Uma Prova Passo a Passo e Mecanicamente Verificada pelo Método da Incompressibilidade em Lean 4}}
+\subtitle{\small{Uma Prova Formalizada pelo Método da Incompressibilidade em Lean 4}}
 \author{Gabriel Resende Machado\texorpdfstring{\\[0.2ex]}{, }{\footnotesize INF2290: Tópicos em Teoria da Computação IV -- Formalização em Lean}}
 \institute{\small Departamento de Informática, PUC-Rio}
-\date{\tikz[remember picture,overlay] \node[anchor=south, yshift=0.5cm] at (current page.south) {12 de Novembro de 2026};}
+\date{\tikz[remember picture,overlay] \node[anchor=south, yshift=0.5cm] at (current page.south) {10 de Dezembro de 2026};}
 
 \begin{document}
 
@@ -195,7 +195,7 @@ A Complexidade de Kolmogorov $K(x)$ é o tamanho (em bits) do menor programa que
     \small
     \begin{itemize}
         \item O método da incompressibilidade fornece limites inferiores em diversos domínios da Teoria da Computação, como complexidade de circuitos e complexidade temporal de Máquinas de Turing \cite{li2019introduction};
-        \item Este trabalho foca no \textbf{Cenário 1}: Teoria dos Números e a Distribuição dos primos.
+        \item Este trabalho foca no \textbf{Cenário 1}: Teoria dos Números e a Distribuição dos Primos.
     \end{itemize}
     \begin{figure}
         \centering
@@ -243,7 +243,7 @@ Objetos imcompressíveis -- ou Kolmogorov-Aleatórios -- violam o Princípio da 
 
 \begin{frame}{PNT Clássico vs. Teorema Fraco dos Primos}
     \begin{itemize}
-        \item \textbf{PNT Clássico} (Hadamard e de la Vallée Poussin, 1896): exige análise complexa (zeros de $\zeta(s)$), o que torna sua formalização muito pesada \cite{apostol1976introduction, avigad2007formalPNT}:
+        \item \textbf{\textit{Prime Number Theorem} (PNT) Clássico} (Hadamard e de la Vallée Poussin, 1896): exige análise complexa (zeros de $\zeta(s)$), o que torna sua formalização muito pesada \cite{apostol1976introduction, avigad2007formalPNT}:
         \begin{equation*}
             \pi(n) \sim \frac{n}{\ln n} \quad \Longleftrightarrow \quad p_m \sim m \ln m.
         \end{equation*}
@@ -268,7 +268,7 @@ Objetos imcompressíveis -- ou Kolmogorov-Aleatórios -- violam o Princípio da 
     \end{figure}
 \end{frame}
 
-\begin{frame}{A ``Prova por Descompressor''}
+\begin{frame}{O Método da Incompressibilidade}
     \small
     \begin{itemize}
         \item Para toda string $x$ reconstruível a partir de uma codificação $E(x)$ por um decodificador fixo de $c$ bits: $K(x) \le |E(x)| + c$;
@@ -298,7 +298,7 @@ Objetos imcompressíveis -- ou Kolmogorov-Aleatórios -- violam o Princípio da 
         \item Usam-se identidades reais, como $\log_2(n/p) = \log_2 n - \log_2 p$, que \textbf{não valem} para logaritmos inteiros $\lfloor \log_2 \cdot \rfloor$ sobre $\mathbb{N}$.
     \end{enumerate}
     \medskip
-    \item As primitivas necessárias estão em \textbf{duas bibliotecas desconectadas} do Lean 4:
+    \item As primitivas necessárias estão em \textbf{duas bibliotecas distintas do Lean 4:}
     \begin{itemize}
         \item \textbf{Mathlib} \cite{mathlib2020}: primos, \texttt{Nat.nth}, \texttt{Nat.log}, mas \textbf{nenhuma} noção de complexidade de Kolmogorov;
         \item \textbf{Complexitylib} \cite{complexitylib2026} (\texttt{Cslib.Kolmogorov}): complexidade abstrata sobre strings, mas \textbf{sem} codificações aritméticas nem códigos autodelimitados.
@@ -306,7 +306,7 @@ Objetos imcompressíveis -- ou Kolmogorov-Aleatórios -- violam o Princípio da 
 \end{itemize}
 \end{frame}
 
-\begin{frame}{Obstáculos para uma Ponte sem \texttt{sorry}}
+\begin{frame}{Obstáculos para Integração das Bibliotecas}
 \begin{enumerate}
     \item \textbf{Injetividade Dinâmica sobre Palavras Binárias:} uma palavra de tamanho variável \texttt{BinWord := List Bool} deve ser decodificada unicamente por uma hierarquia de códigos autodelimitados, sem erros de fronteira nem \textit{lookahead} durante a indução estrutural;
     \medskip
@@ -320,7 +320,7 @@ Objetos imcompressíveis -- ou Kolmogorov-Aleatórios -- violam o Princípio da 
 \end{enumerate}
 \end{frame}
 
-\begin{frame}{O Problema da Ambiguidade de Fronteira}
+\begin{frame}{O Propósito da Codificação Autodelimitada}
     \begin{figure}
         \centering
         \includegraphics[height=0.66\textheight]{figures/prefix-free.jpeg}
@@ -329,7 +329,7 @@ Objetos imcompressíveis -- ou Kolmogorov-Aleatórios -- violam o Princípio da 
     \end{figure}
 \end{frame}
 
-\begin{frame}{Arquitetura da Formalização}
+\begin{frame}{Proposta de Arquitetura para a Formalização}
     \begin{figure}
     \centering
     \includegraphics[height=0.66\textheight]{figures/objetive_filling_gap.jpeg}
@@ -340,7 +340,7 @@ Objetos imcompressíveis -- ou Kolmogorov-Aleatórios -- violam o Princípio da 
 
 \begin{frame}{Problema de Pesquisa}
     \begin{tcolorbox}[pucbox, colframe=red!75!black, title=Problema Central de Pesquisa]
-    Como transformar o argumento semiformal da ``prova por descompressor'' em uma \textbf{prova completa, passo a passo e mecanicamente verificada em Lean 4} (livre de \texttt{sorry}) do \textbf{Teorema Fraco dos Números Primos} e de seu \textbf{refinamento iterado}, construindo a ponte, hoje inexistente, entre a aritmética da \texttt{\textbf{Mathlib}} e a complexidade de Kolmogorov da \texttt{\textbf{Complexitylib}}?
+    Como transformar o argumento do método da incompressibilidade em uma \textbf{prova completa e mecanicamente verificada em Lean 4} (livre de \texttt{sorry}) do \textbf{Teorema Fraco dos Números Primos} e de seu \textbf{refinamento iterado}, construindo a ponte, hoje inexistente, entre a aritmética da \texttt{\textbf{Mathlib}} e a complexidade de Kolmogorov da \texttt{\textbf{Complexitylib}}?
     \end{tcolorbox}
 \end{frame}
 
@@ -379,13 +379,13 @@ Objetos imcompressíveis -- ou Kolmogorov-Aleatórios -- violam o Princípio da 
 \begin{frame}{Objetivos Específicos II}
 \begin{enumerate}
     \setcounter{enumi}{2}
-    \item \textbf{Infinitude e Redução Analítica (\texttt{InfinitudePrimes.lean}, \texttt{PrimeReconstruction.lean}; Ex. 9.1--9.3):}
+    \item \textbf{Infinitude e Redução Analítica (\texttt{InfinitudePrimes.lean}, \texttt{PrimeReconstruction.lean}):}
     \begin{itemize}
         \item Provar a infinitude dos primos por compressão da tupla de expoentes;
         \item Formalizar a reconstrução injetora $n = p_m \cdot k$ e a redução discreta de cotas de $p_m$ para cotas de $\pi(n)$.
     \end{itemize}
     \medskip
-    \item \textbf{Weak PNT e Refinamento Iterado (\texttt{WeakPNT.lean}; Ex. 9.4--9.5):}
+    \item \textbf{Weak PNT e Refinamento Iterado (\texttt{WeakPNT.lean}):}
     \begin{itemize}
         \item Provar a \textbf{Inequação Central de Balanço de Bits} $\lfloor\log_2 p_m\rfloor \le |\text{enc}_m| + c$;
         \item Derivar $\pi(n) = \Omega(n/\log_2^2 n)$ e $p_m = \mathcal{O}(m \log_2 m (\log_2\log_2 m)^2)$.
